@@ -26,6 +26,7 @@ dependencies = [
     "langchain-huggingface>=1.2.0",
     "langchain-chroma>=1.1.0",
     "langchain-ollama>=1.0.1",
+    "unstructured[all-docs]>=0.18.27",
 ]
 
 [project.optional-dependencies]

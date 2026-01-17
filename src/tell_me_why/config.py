@@ -19,7 +19,7 @@ class APIKeysConfig(BaseModel):
 
 class PathsConfig(BaseModel):
     """File paths configuration."""
-    docs_path: Path = Field(default=Path("./private_docs"))
+    docs_path: Path = Field(default=Path("./rag_documents"))
     chroma_db_path: Path = Field(default=Path("./chroma_db"))
 
     @field_validator('docs_path', 'chroma_db_path', mode='before')
