@@ -73,13 +73,13 @@ def setup_command(root_dir: Optional[Path], auto_install: bool = True) -> None:
             console.print("\n[bold green]✓[/bold green] Setup completed successfully!", style="green")
             sys.exit(0)
         else:
-            console.print("\n[bold red]✗[/bold red] Setup failed. Check the output above for details.", style="red")
+            console.print("\n[bold red]✗[/bold red] Setup failed. Check ./tmw.log file for more details.", style="red")
     except KeyboardInterrupt:
         console.print("\n[yellow]Setup cancelled by user.[/yellow]")
         sys.exit(130)
     except Exception as e:
-        raise e
         console.print(f"\n[bold red]Error:[/bold red] {e}", style="red")
+        console.print("[dim]Check ./tmw.log file for more details.[/dim]")
         sys.exit(1)
 
 
@@ -162,8 +162,8 @@ def start_command(
         console.print("\n[yellow]Server stopped by user.[/yellow]")
         sys.exit(0)
     except Exception as e:
-        raise e
         console.print(f"\n[bold red]Error starting server:[/bold red] {e}", style="red")
+        console.print("[dim]Check ./tmw.log file for more details.[/dim]")
         sys.exit(1)
 
 
@@ -245,6 +245,7 @@ def ingest_command(docs_path: Optional[Path], force: bool) -> None:
             if not documents:
                 progress.stop()
                 console.print("[red]No documents found to ingest![/red]")
+                console.print("[dim]Check ./tmw.log file for more details.[/dim]")
                 sys.exit(1)
 
             # Update task for splitting
@@ -254,6 +255,7 @@ def ingest_command(docs_path: Optional[Path], force: bool) -> None:
             if not chunks:
                 progress.stop()
                 console.print("[red]No chunks created from documents![/red]")
+                console.print("[dim]Check ./tmw.log file for more details.[/dim]")
                 sys.exit(1)
 
             # Update task for ingestion
@@ -270,6 +272,7 @@ def ingest_command(docs_path: Optional[Path], force: bool) -> None:
         sys.exit(130)
     except Exception as e:
         console.print(f"\n[bold red]Ingestion failed:[/bold red] {e}", style="red")
+        console.print("[dim]Check ./tmw.log file for more details.[/dim]")
         import traceback
         console.print(f"[dim]{traceback.format_exc()}[/dim]")
         sys.exit(1)
@@ -457,6 +460,7 @@ def test_command(url: str, skip_claude: bool) -> None:
         sys.exit(0)
     else:
         console.print("\n[bold yellow]⚠ Some tests failed. Check the output above.[/bold yellow]")
+        console.print("[dim]Check ./tmw.log file for more details.[/dim]")
         sys.exit(1)
 
 
@@ -504,6 +508,7 @@ def config_command(show: bool, edit: bool) -> None:
         except Exception as e:
             console.print(f"[red]Error opening editor:[/red] {e}")
             console.print(f"[dim]You can manually edit: {config_path}[/dim]")
+            console.print("[dim]Check ./tmw.log file for more details.[/dim]")
             sys.exit(1)
     elif show:
         # Display current config
@@ -556,11 +561,13 @@ def quick_start_command(ctx: click.Context, skip_setup: bool) -> None:
             success = manager.run_setup(auto_install=True)
 
             if not success:
-                console.print("\n[red]Setup failed. Cannot start server. Check ./tmw.log file for more details.[/red]")
+                console.print("\n[red]Setup failed. Cannot start server.[/red]")
+                console.print("[dim]Check ./tmw.log file for more details.[/dim]")
                 sys.exit(1)
             console.print("\n[bold green]✓[/bold green] Setup completed successfully!", style="green")
         except Exception as e:
             console.print(f"\n[red]Setup error:[/red] {e}")
+            console.print("[dim]Check ./tmw.log file for more details.[/dim]")
             sys.exit(1)
 
     # Start the server

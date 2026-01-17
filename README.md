@@ -52,21 +52,46 @@ uv pip install -e .
 tmw config --edit
 ```
 
-3. Index your files
+3. Install & prepare Ollama
+
+Download and install Ollama from: https://ollama.com/download
+
+After installation:
+
+```bash
+# See what models you already have (if any)
+ollama list
+
+# Download a good code model (pick one or more)
+ollama pull codellama     # Meta's code model (~7B)
+# or
+ollama pull deepseek-coder  # Often better for coding tasks
+# or
+ollama pull llama3.1        # Very capable general model
+```
+
+Most Operating Systems start the Ollama server automatically after install.  
+If your client says "cannot connect to Ollama", run this in a separate terminal:
+
+```bash
+ollama serve
+```
+
+4. Index your files
 
 ```bash
 tmw ingest
 ```
 
-4. Start server
+5. Start the server
 
 ```bash
-# Make sure you have ollama installed and the relevant models downloaded
+# Ollama should be running + model downloaded
 tmw start
 ```
 
-API will be at http://localhost:8000 <br />
-Logs are saved in `./tmw.log`
+API → http://localhost:8000  
+Logs → `./tmw.log`
 
 ### Two LLM choices
 
@@ -85,10 +110,14 @@ Just run `tmw ingest` again (or hit `/ingest` endpoint)
 ### Troubleshooting one-liners
 
 ```bash
-ollama list                # is model downloaded?
-ollama serve               # is ollama running?
-rm -rf chroma_db           # fresh start (then re-ingest)
-tail -f tmw.log            # what's happening
+ollama list                # which models are downloaded?
+ollama pull deepseek-coder # download / update a model if needed
+
+# Only if connection fails — check if server is actually running
+ollama serve               # (usually not needed — starts automatically)
+
+rm -rf chroma_db           # fresh vector DB start (then re-ingest)
+tail -f tmw.log            # watch logs
 curl http://localhost:8000/stats
 ```
 
