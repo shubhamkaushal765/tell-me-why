@@ -79,6 +79,9 @@ ollama serve
 
 4. Index your files
 
+Default path is `./rag_documents/`. It's recursively checks for documents and code. This path can be changed in
+`config.yaml`.
+
 ```bash
 tmw ingest
 ```
