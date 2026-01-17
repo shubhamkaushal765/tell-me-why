@@ -10,7 +10,7 @@ from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-from config import settings, validate_settings
+from config import config_manager, get_settings, update_settings, reload_settings, validate_settings
 from ingest import DocumentIngestor
 from rag_chain import chain_manager
 
@@ -89,18 +89,20 @@ async def lifespan(app: FastAPI):
     logger.info("Starting RAG Code Assistant API...")
     validate_settings()
 
+    settings = get_settings()
+
     # Initialize default chain to warm up
     try:
         logger.info("Warming up default LLM chain...")
-        chain_manager.get_chain(settings.default_llm)
+        chain_manager.get_chain(settings.llm.default)
         logger.info("✓ Default chain ready")
     except Exception as e:
         logger.error(f"Failed to initialize default chain: {e}")
 
     logger.info("=" * 60)
     logger.info("API is ready to accept requests!")
-    logger.info(f"Default LLM: {settings.default_llm}")
-    logger.info(f"Listening on: http://{settings.api_host}:{settings.api_port}")
+    logger.info(f"Default LLM: {settings.llm.default}")
+    logger.info(f"Listening on: http://{settings.api.host}:{settings.api.port}")
     logger.info("=" * 60)
 
     yield
@@ -120,7 +122,7 @@ app = FastAPI(
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins,
+    allow_origins=get_settings().api.cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -131,23 +133,100 @@ app.add_middleware(
 @app.get("/", response_model=HealthResponse)
 async def root():
     """Health check endpoint."""
+    settings = get_settings()
     return HealthResponse(
         status="healthy",
         version="0.1.0",
-        llm_default=settings.default_llm,
-        vector_store_path=str(settings.chroma_db_path)
+        llm_default=settings.llm.default,
+        vector_store_path=str(settings.paths.chroma_db_path)
     )
 
 
 @app.get("/health", response_model=HealthResponse)
 async def health_check():
     """Detailed health check endpoint."""
+    settings = get_settings()
     return HealthResponse(
         status="healthy",
         version="0.1.0",
-        llm_default=settings.default_llm,
-        vector_store_path=str(settings.chroma_db_path)
+        llm_default=settings.llm.default,
+        vector_store_path=str(settings.paths.chroma_db_path)
     )
+
+
+@app.get("/config")
+async def get_config():
+    """
+    Get current configuration.
+    Returns the full configuration as JSON.
+    """
+    try:
+        return config_manager.get_dict()
+    except Exception as e:
+        logger.error(f"Failed to get config: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.put("/config")
+async def update_config(updates: dict):
+    """
+    Update configuration settings.
+
+    Accepts a nested dictionary of configuration updates.
+    The configuration is validated and saved to config.yaml.
+
+    Example:
+    {
+        "llm": {
+            "default": "claude"
+        },
+        "api_keys": {
+            "anthropic_api_key": "sk-ant-..."
+        }
+    }
+    """
+    try:
+        # Update settings
+        updated_settings = update_settings(updates)
+
+        # Clear RAG chain cache to use new settings
+        chain_manager.chains.clear()
+
+        logger.info(f"Configuration updated: {list(updates.keys())}")
+
+        return {
+            "status": "success",
+            "message": "Configuration updated successfully",
+            "updated_fields": list(updates.keys()),
+            "config": config_manager.get_dict()
+        }
+    except Exception as e:
+        logger.error(f"Failed to update config: {e}", exc_info=True)
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.post("/config/reload")
+async def reload_config():
+    """
+    Reload configuration from config.yaml file.
+    Useful if the file was edited manually.
+    """
+    try:
+        reload_settings()
+
+        # Clear RAG chain cache
+        chain_manager.chains.clear()
+
+        logger.info("Configuration reloaded from file")
+
+        return {
+            "status": "success",
+            "message": "Configuration reloaded successfully",
+            "config": config_manager.get_dict()
+        }
+    except Exception as e:
+        logger.error(f"Failed to reload config: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/query", response_model=QueryResponse)
@@ -161,15 +240,16 @@ async def query_rag(request: QueryRequest):
     - "Explain the authentication module"
     """
     try:
+        settings = get_settings()
         logger.info(f"Received query request: llm_type={request.llm_type}")
 
         # Validate Claude API key if using Claude
-        if request.llm_type == "claude" and not settings.anthropic_api_key:
+        if request.llm_type == "claude" and not settings.api_keys.anthropic_api_key:
             raise HTTPException(
                 status_code=400,
                 detail=(
                     "Claude API key not configured. "
-                    "Please set ANTHROPIC_API_KEY in your .env file or use 'ollama' instead."
+                    "Please set api_keys.anthropic_api_key in config.yaml or use 'ollama' instead."
                 )
             )
 
@@ -226,26 +306,28 @@ async def ingest_documents(request: IngestRequest, background_tasks: BackgroundT
 async def get_stats():
     """Get statistics about the vector store and available models."""
     try:
+        settings = get_settings()
+
         # Get vector store stats
-        chain = chain_manager.get_chain(settings.default_llm)
+        chain = chain_manager.get_chain(settings.llm.default)
         collection = chain.vectorstore._collection
 
         return {
             "vector_store": {
                 "total_documents": collection.count(),
-                "embedding_model": settings.embedding_model,
-                "location": str(settings.chroma_db_path)
+                "embedding_model": settings.embedding.model,
+                "location": str(settings.paths.chroma_db_path)
             },
             "llm": {
-                "default": settings.default_llm,
-                "ollama_model": settings.ollama_model,
-                "claude_model": settings.claude_model,
-                "claude_available": bool(settings.anthropic_api_key)
+                "default": settings.llm.default,
+                "ollama_model": settings.llm.ollama.model,
+                "claude_model": settings.llm.claude.model,
+                "claude_available": bool(settings.api_keys.anthropic_api_key)
             },
             "retrieval": {
-                "top_k": settings.retrieval_k,
-                "chunk_size": settings.chunk_size,
-                "chunk_overlap": settings.chunk_overlap
+                "top_k": settings.retrieval.top_k,
+                "chunk_size": settings.chunking.chunk_size,
+                "chunk_overlap": settings.chunking.chunk_overlap
             }
         }
     except Exception as e:
@@ -256,22 +338,24 @@ async def get_stats():
 @app.get("/models")
 async def list_models():
     """List available LLM models and their status."""
+    settings = get_settings()
+
     models = {
         "ollama": {
             "available": True,  # Assume always available if Ollama is running
-            "model": settings.ollama_model,
-            "base_url": settings.ollama_base_url,
+            "model": settings.llm.ollama.model,
+            "base_url": settings.llm.ollama.base_url,
             "privacy": "✓ Fully local - your data never leaves your machine"
         },
         "claude": {
-            "available": bool(settings.anthropic_api_key),
-            "model": settings.claude_model,
+            "available": bool(settings.api_keys.anthropic_api_key),
+            "model": settings.llm.claude.model,
             "privacy": "⚠ Cloud-based - data is sent to Anthropic servers"
         }
     }
 
     return {
-        "default": settings.default_llm,
+        "default": settings.llm.default,
         "models": models
     }
 
@@ -279,10 +363,12 @@ async def list_models():
 if __name__ == "__main__":
     import uvicorn
 
+    settings = get_settings()
+
     uvicorn.run(
         "app:app",
-        host=settings.api_host,
-        port=settings.api_port,
-        reload=True,  # Enable auto-reload during development
-        log_level=settings.log_level.lower()
+        host=settings.api.host,
+        port=settings.api.port,
+        reload=settings.api.reload,
+        log_level=settings.logging.level.lower()
     )

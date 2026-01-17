@@ -1,0 +1,71 @@
+# RAG Code Assistant Configuration
+# This file contains all settings for the application
+
+# API Keys
+api_keys:
+  anthropic_api_key: null  # Set your Claude API key here or leave null to use Ollama only
+
+# Paths
+paths:
+  docs_path: "./private_docs"  # Path to your private documentation and code
+  chroma_db_path: "./chroma_db"  # Path where vector database will be stored
+
+# Embedding Model
+embedding:
+  model: "sentence-transformers/all-MiniLM-L6-v2"  # Local HuggingFace model
+  device: "cpu"  # Use "cuda" if you have a GPU
+
+# Text Splitting
+chunking:
+  chunk_size: 1000  # Size of document chunks
+  chunk_overlap: 200  # Overlap between chunks for context
+
+# Retrieval
+retrieval:
+  top_k: 5  # Number of relevant documents to retrieve per query
+
+# LLM Settings
+llm:
+  default: "ollama"  # Default LLM: "ollama" (local/private) or "claude" (cloud)
+
+  ollama:
+    model: "codellama"  # Options: codellama, llama3, deepseek-coder
+    base_url: "http://localhost:11434"
+    temperature: 0.1
+
+  claude:
+    model: "claude-sonnet-4-20250514"
+    temperature: 0.1
+    max_tokens: 4096
+
+# API Server Settings
+api:
+  host: "0.0.0.0"
+  port: 8000
+  cors_origins:
+    - "http://localhost:3000"
+    - "http://127.0.0.1:3000"
+  reload: true  # Auto-reload during development
+
+# Logging
+logging:
+  level: "INFO"  # Options: DEBUG, INFO, WARNING, ERROR
+
+# Ingestion Settings
+ingestion:
+  supported_file_types:
+    documentation:
+      - ".md"
+      - ".pdf"
+      - ".txt"
+    code:
+      - ".ts"
+      - ".js"
+      - ".tsx"
+      - ".jsx"
+      - ".html"
+      - ".css"
+      - ".scss"
+
+  # Auto-ingest on startup if vector store is empty
+  auto_ingest_on_startup: false

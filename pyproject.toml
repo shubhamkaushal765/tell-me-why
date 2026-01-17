@@ -18,6 +18,8 @@ dependencies = [
     "tiktoken>=0.5.2",
     "anthropic>=0.18.0",
     "ollama>=0.1.6",
+    "pyyaml>=6.0",
+    "requests>=2.31.0",
 ]
 
 [project.optional-dependencies]
@@ -38,3 +40,6 @@ target-version = ['py312']
 [tool.ruff]
 line-length = 100
 target-version = "py312"
+
+[tool.uv]
+editable = true

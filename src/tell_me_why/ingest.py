@@ -19,11 +19,12 @@ from langchain_community.document_loaders import (
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
 
-from config import settings, validate_settings
+from config import get_settings, validate_settings
 
 # Setup logging
+settings = get_settings()
 logging.basicConfig(
-    level=settings.log_level,
+    level=settings.logging.level,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
@@ -36,18 +37,20 @@ class DocumentIngestor:
         """Initialize the document ingestor with embeddings and vector store."""
         logger.info("Initializing DocumentIngestor...")
 
+        settings = get_settings()
+
         # Initialize embeddings (local HuggingFace model)
-        logger.info(f"Loading embedding model: {settings.embedding_model}")
+        logger.info(f"Loading embedding model: {settings.embedding.model}")
         self.embeddings = HuggingFaceEmbeddings(
-            model_name=settings.embedding_model,
-            model_kwargs={'device': 'cpu'},  # Use 'cuda' if GPU available
+            model_name=settings.embedding.model,
+            model_kwargs={'device': settings.embedding.device},
             encode_kwargs={'normalize_embeddings': True}
         )
 
         # Initialize text splitters
         self.doc_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=settings.chunk_size,
-            chunk_overlap=settings.chunk_overlap,
+            chunk_size=settings.chunking.chunk_size,
+            chunk_overlap=settings.chunking.chunk_overlap,
             length_function=len,
             separators=["\n\n", "\n", " ", ""]
         )
@@ -55,15 +58,15 @@ class DocumentIngestor:
         # Code-aware splitter for TypeScript/Angular files
         self.code_splitter = RecursiveCharacterTextSplitter.from_language(
             language=Language.TS,
-            chunk_size=settings.chunk_size,
-            chunk_overlap=settings.chunk_overlap,
+            chunk_size=settings.chunking.chunk_size,
+            chunk_overlap=settings.chunking.chunk_overlap,
         )
 
         # HTML splitter for Angular templates
         self.html_splitter = RecursiveCharacterTextSplitter.from_language(
             language=Language.HTML,
-            chunk_size=settings.chunk_size,
-            chunk_overlap=settings.chunk_overlap,
+            chunk_size=settings.chunking.chunk_size,
+            chunk_overlap=settings.chunking.chunk_overlap,
         )
 
     def load_documents(self, path: Path) -> List[Document]:
@@ -178,11 +181,13 @@ class DocumentIngestor:
         """Ingest document chunks into ChromaDB vector store."""
         logger.info("Ingesting documents into vector store...")
 
+        settings = get_settings()
+
         # Create or load vector store
         vectorstore = Chroma.from_documents(
             documents=documents,
             embedding=self.embeddings,
-            persist_directory=str(settings.chroma_db_path),
+            persist_directory=str(settings.paths.chroma_db_path),
             collection_name="code_docs"
         )
 
@@ -195,8 +200,10 @@ class DocumentIngestor:
         logger.info("Starting document ingestion pipeline")
         logger.info("=" * 60)
 
+        settings = get_settings()
+
         # Load documents
-        documents = self.load_documents(settings.docs_path)
+        documents = self.load_documents(settings.paths.docs_path)
 
         if not documents:
             logger.warning("No documents found to ingest!")

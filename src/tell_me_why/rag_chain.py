@@ -11,7 +11,7 @@ from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.llms import Ollama
 from langchain_community.vectorstores import Chroma
 
-from config import settings
+from config import get_settings
 
 logger = logging.getLogger(__name__)
 
@@ -39,19 +39,20 @@ class RAGChain:
             llm_type: Either "ollama" for local processing or "claude" for cloud-based
         """
         self.llm_type = llm_type
+        settings = get_settings()
 
         # Initialize embeddings (same as used during ingestion)
-        logger.info(f"Loading embedding model: {settings.embedding_model}")
+        logger.info(f"Loading embedding model: {settings.embedding.model}")
         self.embeddings = HuggingFaceEmbeddings(
-            model_name=settings.embedding_model,
-            model_kwargs={'device': 'cpu'},
+            model_name=settings.embedding.model,
+            model_kwargs={'device': settings.embedding.device},
             encode_kwargs={'normalize_embeddings': True}
         )
 
         # Load vector store
-        logger.info(f"Loading vector store from: {settings.chroma_db_path}")
+        logger.info(f"Loading vector store from: {settings.paths.chroma_db_path}")
         self.vectorstore = Chroma(
-            persist_directory=str(settings.chroma_db_path),
+            persist_directory=str(settings.paths.chroma_db_path),
             embedding_function=self.embeddings,
             collection_name="code_docs"
         )
@@ -70,7 +71,7 @@ class RAGChain:
             llm=self.llm,
             chain_type="stuff",
             retriever=self.vectorstore.as_retriever(
-                search_kwargs={"k": settings.retrieval_k}
+                search_kwargs={"k": settings.retrieval.top_k}
             ),
             chain_type_kwargs={"prompt": self.prompt},
             return_source_documents=True
@@ -80,18 +81,20 @@ class RAGChain:
 
     def _initialize_llm(self, llm_type: str):
         """Initialize the appropriate LLM based on type."""
+        settings = get_settings()
+
         if llm_type == "ollama":
-            logger.info(f"Initializing Ollama LLM: {settings.ollama_model}")
+            logger.info(f"Initializing Ollama LLM: {settings.llm.ollama.model}")
             return Ollama(
-                model=settings.ollama_model,
-                base_url=settings.ollama_base_url,
-                temperature=0.1,  # Low temperature for code generation
+                model=settings.llm.ollama.model,
+                base_url=settings.llm.ollama.base_url,
+                temperature=settings.llm.ollama.temperature,
             )
 
         elif llm_type == "claude":
-            if not settings.anthropic_api_key:
+            if not settings.api_keys.anthropic_api_key:
                 raise ValueError(
-                    "ANTHROPIC_API_KEY not set. Please set it in your .env file to use Claude."
+                    "ANTHROPIC_API_KEY not set. Please set it in config.yaml to use Claude."
                 )
 
             logger.warning(
@@ -99,12 +102,12 @@ class RAGChain:
                 "For complete privacy, use Ollama instead."
             )
 
-            logger.info(f"Initializing Claude LLM: {settings.claude_model}")
+            logger.info(f"Initializing Claude LLM: {settings.llm.claude.model}")
             return ChatAnthropic(
-                model=settings.claude_model,
-                anthropic_api_key=settings.anthropic_api_key,
-                temperature=0.1,
-                max_tokens=4096,
+                model=settings.llm.claude.model,
+                anthropic_api_key=settings.api_keys.anthropic_api_key,
+                temperature=settings.llm.claude.temperature,
+                max_tokens=settings.llm.claude.max_tokens,
             )
 
         else:
