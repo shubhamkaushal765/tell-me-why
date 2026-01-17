@@ -81,24 +81,24 @@ def setup_command(
 
 @app.command("start")
 def start_command(
-        host: str = typer.Option(
+        host: Optional[str] = typer.Option(
             None,
             "--host",
             "-h",
             help="Host to bind the API server (overrides config.yaml)"
         ),
-        port: int = typer.Option(
+        port: Optional[int] = typer.Option(
             None,
             "--port",
             "-p",
             help="Port to bind the API server (overrides config.yaml)"
         ),
-        reload: bool = typer.Option(
+        reload: Optional[bool] = typer.Option(
             None,
             "--reload/--no-reload",
             help="Enable auto-reload on code changes (overrides config.yaml)"
         ),
-        log_level: str = typer.Option(
+        log_level: Optional[str] = typer.Option(
             None,
             "--log-level",
             "-l",
@@ -126,10 +126,10 @@ def start_command(
         settings = get_settings()
 
         # Use command line arguments if provided, otherwise use config
-        final_host = host or settings.api.host
-        final_port = port or settings.api.port
+        final_host = host if host is not None else settings.api.host
+        final_port = port if port is not None else settings.api.port
         final_reload = reload if reload is not None else settings.api.reload
-        final_log_level = log_level or settings.logging.level.lower()
+        final_log_level = (log_level if log_level is not None else settings.logging.level).lower()
 
         console.print(f"\n[cyan]Host:[/cyan] {final_host}")
         console.print(f"[cyan]Port:[/cyan] {final_port}")
@@ -151,6 +151,7 @@ def start_command(
         console.print("\n[yellow]Server stopped by user.[/yellow]")
         sys.exit(0)
     except Exception as e:
+        raise e
         console.print(f"\n[bold red]Error starting server:[/bold red] {e}", style="red")
         sys.exit(1)
 
@@ -202,7 +203,7 @@ def ingest_command(
         settings = get_settings()
 
         # Use provided docs path or config
-        final_docs_path = docs_path or settings.paths.docs_path
+        final_docs_path = docs_path if docs_path is not None else settings.paths.docs_path
 
         console.print(f"\n[cyan]Documents Path:[/cyan] {final_docs_path}")
         console.print(f"[cyan]Vector Store:[/cyan] {settings.paths.chroma_db_path}")
