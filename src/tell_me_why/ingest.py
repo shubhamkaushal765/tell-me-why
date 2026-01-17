@@ -4,7 +4,7 @@ Loads documents from the specified directory, processes them, and stores in Chro
 """
 import logging
 from pathlib import Path
-from typing import List
+from typing import List, Dict, Set
 
 from langchain_community.document_loaders import (
     TextLoader,
@@ -33,6 +33,69 @@ logger = logging.getLogger(__name__)
 class DocumentIngestor:
     """Handles document loading, splitting, and ingestion into vector store."""
 
+    # Map file extensions to language-aware splitters
+    LANGUAGE_SPLITTER_MAP = {
+        # JavaScript/TypeScript
+        '.js': Language.JS,
+        '.jsx': Language.JS,
+        '.ts': Language.TS,
+        '.tsx': Language.TS,
+        '.mjs': Language.JS,
+        '.cjs': Language.JS,
+
+        # Python
+        '.py': Language.PYTHON,
+        '.pyx': Language.PYTHON,
+        '.pyi': Language.PYTHON,
+
+        # Rust
+        '.rs': Language.RUST,
+
+        # C#
+        '.cs': Language.CSHARP,
+        '.csx': Language.CSHARP,
+
+        # Java and JVM
+        '.java': Language.JAVA,
+        '.kt': Language.KOTLIN,
+        '.scala': Language.SCALA,
+
+        # C/C++
+        '.c': Language.C,
+        '.cpp': Language.CPP,
+        '.cc': Language.CPP,
+        '.cxx': Language.CPP,
+        '.h': Language.CPP,
+        '.hpp': Language.CPP,
+        '.hxx': Language.CPP,
+
+        # Go
+        '.go': Language.GO,
+
+        # Ruby
+        '.rb': Language.RUBY,
+
+        # PHP
+        '.php': Language.PHP,
+
+        # HTML/Markdown
+        '.html': Language.HTML,
+        '.md': Language.MARKDOWN,
+        '.rst': Language.RST,
+
+        # Lua
+        '.lua': Language.LUA,
+
+        # Haskell
+        '.hs': Language.HASKELL,
+
+        # Swift
+        '.swift': Language.SWIFT,
+
+        # Perl
+        '.pl': Language.PERL,
+    }
+
     def __init__(self):
         """Initialize the document ingestor with embeddings and vector store."""
         logger.info("Initializing DocumentIngestor...")
@@ -55,102 +118,116 @@ class DocumentIngestor:
             separators=["\n\n", "\n", " ", ""]
         )
 
-        # Code-aware splitter for TypeScript/Angular files
-        self.code_splitter = RecursiveCharacterTextSplitter.from_language(
-            language=Language.TS,
-            chunk_size=settings.chunking.chunk_size,
-            chunk_overlap=settings.chunking.chunk_overlap,
-        )
+        # Cache for language-specific splitters
+        self.language_splitters: Dict[Language, RecursiveCharacterTextSplitter] = {}
 
-        # HTML splitter for Angular templates
-        self.html_splitter = RecursiveCharacterTextSplitter.from_language(
-            language=Language.HTML,
-            chunk_size=settings.chunking.chunk_size,
-            chunk_overlap=settings.chunking.chunk_overlap,
-        )
+    def get_language_splitter(self, language: Language) -> RecursiveCharacterTextSplitter:
+        """Get or create a language-specific splitter."""
+        if language not in self.language_splitters:
+            settings = get_settings()
+            self.language_splitters[language] = RecursiveCharacterTextSplitter.from_language(
+                language=language,
+                chunk_size=settings.chunking.chunk_size,
+                chunk_overlap=settings.chunking.chunk_overlap,
+            )
+        return self.language_splitters[language]
+
+    def get_all_supported_extensions(self) -> Set[str]:
+        """Get all supported file extensions from config."""
+        settings = get_settings()
+        extensions = set()
+        for category, exts in settings.ingestion.supported_file_types.items():
+            extensions.update(exts)
+        return extensions
+
+    def categorize_file(self, file_path: Path) -> Dict[str, str]:
+        """Determine file category and type based on extension."""
+        settings = get_settings()
+        ext = file_path.suffix.lower()
+
+        for category, extensions in settings.ingestion.supported_file_types.items():
+            if ext in extensions:
+                return {
+                    "category": category,
+                    "extension": ext,
+                    "is_code": category not in ["documentation", "data"],
+                    "is_documentation": category == "documentation"
+                }
+
+        return {
+            "category": "unknown",
+            "extension": ext,
+            "is_code": False,
+            "is_documentation": False
+        }
+
+    def load_single_file(self, file_path: Path) -> List[Document]:
+        """Load a single file based on its type."""
+        file_info = self.categorize_file(file_path)
+        ext = file_info["extension"]
+
+        try:
+            # Special handling for specific file types
+            if ext == ".md":
+                loader = UnstructuredMarkdownLoader(str(file_path))
+            elif ext == ".pdf":
+                loader = PyPDFLoader(str(file_path))
+            else:
+                # Default to TextLoader for all other files
+                loader = TextLoader(str(file_path), encoding="utf-8")
+
+            docs = loader.load()
+
+            # Add metadata to each document
+            for doc in docs:
+                doc.metadata["source_type"] = "code" if file_info["is_code"] else "documentation"
+                doc.metadata["file_type"] = ext.lstrip(".")
+                doc.metadata["category"] = file_info["category"]
+                doc.metadata["source_file"] = str(file_path)
+
+                # Add language metadata if it's a code file
+                if ext in self.LANGUAGE_SPLITTER_MAP:
+                    doc.metadata["language"] = self.LANGUAGE_SPLITTER_MAP[ext].value
+
+            return docs
+
+        except Exception as e:
+            logger.error(f"Error loading {file_path}: {e}")
+            return []
 
     def load_documents(self, path: Path) -> List[Document]:
         """Load documents from various file types in the specified path."""
         documents = []
+        supported_extensions = self.get_all_supported_extensions()
 
-        # Load Markdown files
-        md_files = list(path.rglob("*.md"))
-        if md_files:
-            logger.info(f"Loading {len(md_files)} Markdown files...")
-            for md_file in md_files:
-                try:
-                    loader = UnstructuredMarkdownLoader(str(md_file))
-                    docs = loader.load()
-                    for doc in docs:
-                        doc.metadata["source_type"] = "documentation"
-                        doc.metadata["file_type"] = "markdown"
-                    documents.extend(docs)
-                except Exception as e:
-                    logger.error(f"Error loading {md_file}: {e}")
+        logger.info(f"Scanning directory: {path}")
+        logger.info(f"Supporting {len(supported_extensions)} file types")
 
-        # Load PDF files
-        pdf_files = list(path.rglob("*.pdf"))
-        if pdf_files:
-            logger.info(f"Loading {len(pdf_files)} PDF files...")
-            for pdf_file in pdf_files:
-                try:
-                    loader = PyPDFLoader(str(pdf_file))
-                    docs = loader.load()
-                    for doc in docs:
-                        doc.metadata["source_type"] = "documentation"
-                        doc.metadata["file_type"] = "pdf"
-                    documents.extend(docs)
-                except Exception as e:
-                    logger.error(f"Error loading {pdf_file}: {e}")
+        # Collect all files with supported extensions
+        files_by_category = {}
 
-        # Load TypeScript files
-        ts_files = list(path.rglob("*.ts"))
-        if ts_files:
-            logger.info(f"Loading {len(ts_files)} TypeScript files...")
-            for ts_file in ts_files:
-                try:
-                    loader = TextLoader(str(ts_file), encoding="utf-8")
-                    docs = loader.load()
-                    for doc in docs:
-                        doc.metadata["source_type"] = "code"
-                        doc.metadata["file_type"] = "typescript"
-                        doc.metadata["language"] = "typescript"
-                    documents.extend(docs)
-                except Exception as e:
-                    logger.error(f"Error loading {ts_file}: {e}")
+        for ext in supported_extensions:
+            matching_files = list(path.rglob(f"*{ext}"))
+            if matching_files:
+                # Categorize files
+                for file_path in matching_files:
+                    file_info = self.categorize_file(file_path)
+                    category = file_info["category"]
 
-        # Load HTML files (Angular templates)
-        html_files = list(path.rglob("*.html"))
-        if html_files:
-            logger.info(f"Loading {len(html_files)} HTML files...")
-            for html_file in html_files:
-                try:
-                    loader = TextLoader(str(html_file), encoding="utf-8")
-                    docs = loader.load()
-                    for doc in docs:
-                        doc.metadata["source_type"] = "code"
-                        doc.metadata["file_type"] = "html"
-                        doc.metadata["language"] = "html"
-                    documents.extend(docs)
-                except Exception as e:
-                    logger.error(f"Error loading {html_file}: {e}")
+                    if category not in files_by_category:
+                        files_by_category[category] = []
+                    files_by_category[category].append(file_path)
 
-        # Load CSS/SCSS files
-        css_files = list(path.rglob("*.css")) + list(path.rglob("*.scss"))
-        if css_files:
-            logger.info(f"Loading {len(css_files)} CSS/SCSS files...")
-            for css_file in css_files:
-                try:
-                    loader = TextLoader(str(css_file), encoding="utf-8")
-                    docs = loader.load()
-                    for doc in docs:
-                        doc.metadata["source_type"] = "code"
-                        doc.metadata["file_type"] = "css"
-                    documents.extend(docs)
-                except Exception as e:
-                    logger.error(f"Error loading {css_file}: {e}")
+        # Load files by category
+        for category, files in sorted(files_by_category.items()):
+            logger.info(f"Loading {len(files)} {category} files...")
 
-        logger.info(f"Loaded {len(documents)} documents total")
+            for file_path in files:
+                docs = self.load_single_file(file_path)
+                documents.extend(docs)
+
+        logger.info(
+            f"Loaded {len(documents)} documents total from {sum(len(f) for f in files_by_category.values())} files")
         return documents
 
     def split_documents(self, documents: List[Document]) -> List[Document]:
@@ -160,19 +237,29 @@ class DocumentIngestor:
         all_chunks = []
 
         for doc in documents:
-            file_type = doc.metadata.get("file_type", "")
+            ext = doc.metadata.get("file_type", "")
+            if ext and not ext.startswith('.'):
+                ext = f".{ext}"
 
             try:
-                if file_type in ["typescript", "ts"]:
-                    chunks = self.code_splitter.split_documents([doc])
-                elif file_type == "html":
-                    chunks = self.html_splitter.split_documents([doc])
+                # Use language-specific splitter if available
+                if ext in self.LANGUAGE_SPLITTER_MAP:
+                    language = self.LANGUAGE_SPLITTER_MAP[ext]
+                    splitter = self.get_language_splitter(language)
+                    chunks = splitter.split_documents([doc])
                 else:
+                    # Use default splitter
                     chunks = self.doc_splitter.split_documents([doc])
 
                 all_chunks.extend(chunks)
             except Exception as e:
                 logger.error(f"Error splitting document {doc.metadata.get('source', 'unknown')}: {e}")
+                # Fallback to default splitter
+                try:
+                    chunks = self.doc_splitter.split_documents([doc])
+                    all_chunks.extend(chunks)
+                except Exception as e2:
+                    logger.error(f"Fallback splitting also failed: {e2}")
 
         logger.info(f"Created {len(all_chunks)} chunks from {len(documents)} documents")
         return all_chunks

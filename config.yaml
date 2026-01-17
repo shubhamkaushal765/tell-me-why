@@ -1,5 +1,6 @@
 # RAG Code Assistant Configuration
 # This file contains all settings for the application
+# Supports any programming language and codebase
 
 # API Keys
 api_keys:
@@ -29,7 +30,7 @@ llm:
   default: "ollama"  # Default LLM: "ollama" (local/private) or "claude" (cloud)
 
   ollama:
-    model: "codellama"  # Options: codellama, llama3, deepseek-coder
+    model: "codellama"  # Options: codellama, llama3, deepseek-coder, qwen2.5-coder
     base_url: "http://localhost:11434"
     temperature: 0.1
 
@@ -51,21 +52,138 @@ api:
 logging:
   level: "INFO"  # Options: DEBUG, INFO, WARNING, ERROR
 
-# Ingestion Settings
+# Ingestion Settings - Multi-Language Support
 ingestion:
   supported_file_types:
+    # Documentation formats
     documentation:
-      - ".md"
-      - ".pdf"
-      - ".txt"
-    code:
-      - ".ts"
-      - ".js"
-      - ".tsx"
-      - ".jsx"
-      - ".html"
-      - ".css"
-      - ".scss"
+      - ".md"        # Markdown
+      - ".pdf"       # PDF documents
+      - ".txt"       # Plain text
+      - ".rst"       # reStructuredText
+      - ".adoc"      # AsciiDoc
+      - ".tex"       # LaTeX
+
+    # Web technologies
+    web:
+      - ".html"      # HTML
+      - ".css"       # CSS
+      - ".scss"      # SASS
+      - ".sass"      # SASS (indented)
+      - ".less"      # LESS
+
+    # JavaScript/TypeScript ecosystem
+    javascript:
+      - ".js"        # JavaScript
+      - ".jsx"       # React JSX
+      - ".ts"        # TypeScript
+      - ".tsx"       # React TypeScript
+      - ".mjs"       # ES6 modules
+      - ".cjs"       # CommonJS
+
+    # Python
+    python:
+      - ".py"        # Python
+      - ".pyx"       # Cython
+      - ".pyi"       # Python type stubs
+
+    # Rust
+    rust:
+      - ".rs"        # Rust source
+      - ".toml"      # Cargo configuration
+
+    # C# / .NET
+    csharp:
+      - ".cs"        # C# source
+      - ".csx"       # C# script
+      - ".cshtml"    # Razor views
+      - ".razor"     # Blazor components
+
+    # Java and JVM languages
+    java:
+      - ".java"      # Java
+      - ".kt"        # Kotlin
+      - ".kts"       # Kotlin script
+      - ".groovy"    # Groovy
+      - ".scala"     # Scala
+
+    # C/C++
+    cpp:
+      - ".c"         # C source
+      - ".cpp"       # C++ source
+      - ".cc"        # C++ source (alt)
+      - ".cxx"       # C++ source (alt)
+      - ".h"         # C/C++ header
+      - ".hpp"       # C++ header
+      - ".hxx"       # C++ header (alt)
+
+    # Go
+    go:
+      - ".go"        # Go source
+      - ".mod"       # Go modules
+      - ".sum"       # Go checksums
+
+    # Ruby
+    ruby:
+      - ".rb"        # Ruby
+      - ".erb"       # Embedded Ruby
+      - ".rake"      # Rake files
+      - ".gemspec"   # Gem specifications
+
+    # PHP
+    php:
+      - ".php"       # PHP
+      - ".phtml"     # PHP templates
+      - ".php3"      # PHP 3
+      - ".php4"      # PHP 4
+      - ".php5"      # PHP 5
+
+    # Shell scripting
+    shell:
+      - ".sh"        # Shell script
+      - ".bash"      # Bash script
+      - ".zsh"       # Zsh script
+      - ".fish"      # Fish script
+      - ".ps1"       # PowerShell
+      - ".bat"       # Batch file
+      - ".cmd"       # Command file
+
+    # Data and configuration
+    data:
+      - ".json"      # JSON
+      - ".yaml"      # YAML
+      - ".yml"       # YAML (alt)
+      - ".xml"       # XML
+      - ".toml"      # TOML
+      - ".ini"       # INI files
+      - ".conf"      # Configuration files
+      - ".cfg"       # Configuration files (alt)
+
+    # Database and query languages
+    database:
+      - ".sql"       # SQL
+      - ".prisma"    # Prisma schema
+      - ".graphql"   # GraphQL
+      - ".gql"       # GraphQL (alt)
+
+    # Mobile development
+    mobile:
+      - ".swift"     # Swift (iOS)
+      - ".m"         # Objective-C
+      - ".mm"        # Objective-C++
+      - ".dart"      # Dart (Flutter)
+
+    # Other languages
+    other:
+      - ".r"         # R
+      - ".jl"        # Julia
+      - ".lua"       # Lua
+      - ".vim"       # Vimscript
+      - ".el"        # Emacs Lisp
+      - ".clj"       # Clojure
+      - ".erl"       # Erlang
+      - ".ex"        # Elixir
+      - ".exs"       # Elixir script
 
   # Auto-ingest on startup if vector store is empty
   auto_ingest_on_startup: false

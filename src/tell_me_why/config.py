@@ -85,8 +85,22 @@ class LoggingConfig(BaseModel):
 class IngestionConfig(BaseModel):
     """Document ingestion configuration."""
     supported_file_types: Dict[str, list[str]] = Field(default_factory=lambda: {
-        "documentation": [".md", ".pdf", ".txt"],
-        "code": [".ts", ".js", ".tsx", ".jsx", ".html", ".css", ".scss"]
+        "documentation": [".md", ".pdf", ".txt", ".rst", ".adoc", ".tex"],
+        "web": [".html", ".css", ".scss", ".sass", ".less"],
+        "javascript": [".js", ".jsx", ".ts", ".tsx", ".mjs", ".cjs"],
+        "python": [".py", ".pyx", ".pyi"],
+        "rust": [".rs", ".toml"],
+        "csharp": [".cs", ".csx", ".cshtml", ".razor"],
+        "java": [".java", ".kt", ".kts", ".groovy", ".scala"],
+        "cpp": [".c", ".cpp", ".cc", ".cxx", ".h", ".hpp", ".hxx"],
+        "go": [".go", ".mod", ".sum"],
+        "ruby": [".rb", ".erb", ".rake", ".gemspec"],
+        "php": [".php", ".phtml", ".php3", ".php4", ".php5"],
+        "shell": [".sh", ".bash", ".zsh", ".fish", ".ps1", ".bat", ".cmd"],
+        "data": [".json", ".yaml", ".yml", ".xml", ".toml", ".ini", ".conf", ".cfg"],
+        "database": [".sql", ".prisma", ".graphql", ".gql"],
+        "mobile": [".swift", ".m", ".mm", ".dart"],
+        "other": [".r", ".jl", ".lua", ".vim", ".el", ".clj", ".erl", ".ex", ".exs"]
     })
     auto_ingest_on_startup: bool = False
 
