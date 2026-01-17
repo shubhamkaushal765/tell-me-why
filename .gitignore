@@ -6,6 +6,9 @@ __pycache__/
 # C extensions
 *.so
 
+rag_documents/
+.idea/
+
 # Distribution / packaging
 .Python
 build/
