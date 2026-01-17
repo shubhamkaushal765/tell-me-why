@@ -231,11 +231,6 @@ python test_api.py
 
 **Usage**:
 
-```bash
-chmod +x quickstart.sh
-./quickstart.sh
-```
-
 ## 🐳 Docker Files
 
 ### `Dockerfile` - Container Image

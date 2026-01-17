@@ -5,6 +5,7 @@ This module provides automatic setup and initialization for the RAG system.
 """
 import logging
 import subprocess
+import sys
 from pathlib import Path
 from typing import Optional
 
@@ -133,12 +134,12 @@ retrieval:
 # LLM Settings
 llm:
   default: "ollama"
-
+  
   ollama:
     model: "codellama"
     base_url: "http://localhost:11434"
     temperature: 0.1
-
+  
   claude:
     model: "claude-sonnet-4-20250514"
     temperature: 0.1
@@ -172,7 +173,7 @@ ingestion:
       - ".html"
       - ".css"
       - ".scss"
-
+  
   auto_ingest_on_startup: false
 """
 
@@ -340,7 +341,8 @@ def quick_start(root_dir: Optional[Path] = None) -> None:
 
 
 # Auto-setup on import if running as main module
-if __name__ == "__main__":
+def main():
+    """CLI entry point for setup."""
     import sys
 
     if len(sys.argv) > 1 and sys.argv[1] == "quick-start":
@@ -348,10 +350,15 @@ if __name__ == "__main__":
     else:
         setup()
 
+
+if __name__ == "__main__":
+    main()
+
 # Export main components
 __all__ = [
     "setup",
     "quick_start",
+    "main",
     "SetupManager",
     "__version__"
 ]
