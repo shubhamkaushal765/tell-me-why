@@ -88,7 +88,7 @@ Just run `tmw ingest` again (or hit `/ingest` endpoint)
 ollama list                # is model downloaded?
 ollama serve               # is ollama running?
 rm -rf chroma_db           # fresh start (then re-ingest)
-tail -f api.log            # what's happening
+tail -f tmw.log            # what's happening
 curl http://localhost:8000/stats
 ```
 

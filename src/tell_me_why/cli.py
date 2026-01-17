@@ -534,7 +534,8 @@ def config_command(show: bool, edit: bool) -> None:
     default=False,
     help="Skip setup and go straight to starting the server"
 )
-def quick_start_command(skip_setup: bool) -> None:
+@click.pass_context
+def quick_start_command(ctx: click.Context, skip_setup: bool) -> None:
     """
     Quick start - setup and launch the API in one command.
 
@@ -555,15 +556,16 @@ def quick_start_command(skip_setup: bool) -> None:
             success = manager.run_setup(auto_install=True)
 
             if not success:
-                console.print("\n[red]Setup failed. Cannot start server.[/red]")
+                console.print("\n[red]Setup failed. Cannot start server. Check ./tmw.log file for more details.[/red]")
                 sys.exit(1)
+            console.print("\n[bold green]✓[/bold green] Setup completed successfully!", style="green")
         except Exception as e:
             console.print(f"\n[red]Setup error:[/red] {e}")
             sys.exit(1)
 
     # Start the server
     console.print("\n[cyan]Starting API server...[/cyan]\n")
-    start_command(host=None, port=None, reload=None, log_level=None)
+    ctx.invoke(start_command, host=None, port=None, reload=None, log_level=None)
 
 
 @app.command("version")
