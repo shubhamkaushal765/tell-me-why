@@ -211,7 +211,9 @@ ingestion:
             "fastapi",
             "chromadb",
             "sentence_transformers",
-            "pyyaml"
+            "pyyaml",
+            "typer",
+            "rich"
         ]
 
         missing = []
@@ -283,82 +285,20 @@ ingestion:
         logger.info(f"   {self.config_path}")
         logger.info("")
         logger.info("3. Ingest documents:")
-        logger.info("   python -m tell_me_why.ingest")
+        logger.info("   tmw ingest")
         logger.info("")
         logger.info("4. Start the API:")
-        logger.info("   python -m tell_me_why.app")
+        logger.info("   tmw start")
+        logger.info("")
+        logger.info("Or use: tmw --help for all commands")
         logger.info("")
 
         return True
 
-    def quick_start(self) -> None:
-        """Run quick start - setup and launch API."""
-        if self.run_setup():
-            logger.info("\nStarting API server...")
-            try:
-                from .app import app
-                import uvicorn
-
-                # Load config to get API settings
-                from .config import config_manager
-                api_config = config_manager.settings.api
-
-                uvicorn.run(
-                    app,
-                    host=api_config.host,
-                    port=api_config.port,
-                    reload=api_config.reload
-                )
-            except Exception as e:
-                logger.error(f"Failed to start API: {e}")
-                logger.info("\nTry running manually: python -m tell_me_why.app")
-
-
-def setup(auto_install: bool = True, root_dir: Optional[Path] = None) -> bool:
-    """
-    Run the setup process.
-
-    Args:
-        auto_install: If True, automatically install dependencies
-        root_dir: Root directory of the project
-
-    Returns:
-        True if setup successful, False otherwise
-    """
-    manager = SetupManager(root_dir)
-    return manager.run_setup(auto_install)
-
-
-def quick_start(root_dir: Optional[Path] = None) -> None:
-    """
-    Quick start - run setup and launch API.
-
-    Args:
-        root_dir: Root directory of the project
-    """
-    manager = SetupManager(root_dir)
-    manager.quick_start()
-
-
-# Auto-setup on import if running as main module
-def main():
-    """CLI entry point for setup."""
-    import sys
-
-    if len(sys.argv) > 1 and sys.argv[1] == "quick-start":
-        quick_start()
-    else:
-        setup()
-
-
-if __name__ == "__main__":
-    main()
 
 # Export main components
 __all__ = [
-    "setup",
-    "quick_start",
-    "main",
     "SetupManager",
-    "__version__"
+    "__version__",
+    "__author__",
 ]

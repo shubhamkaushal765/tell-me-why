@@ -2,11 +2,10 @@
 Test script for the RAG Code Assistant API.
 Run this after starting the API to verify everything works.
 """
+import sys
 import time
 
 import requests
-
-API_URL = "http://localhost:8000"
 
 
 def print_section(title: str):
@@ -16,11 +15,11 @@ def print_section(title: str):
     print("=" * 60)
 
 
-def test_health() -> bool:
+def test_health(api_url: str) -> bool:
     """Test the health endpoint."""
     print_section("Testing Health Endpoint")
     try:
-        response = requests.get(f"{API_URL}/health")
+        response = requests.get(f"{api_url}/health")
         response.raise_for_status()
         data = response.json()
 
@@ -35,11 +34,11 @@ def test_health() -> bool:
         return False
 
 
-def test_stats() -> bool:
+def test_stats(api_url: str) -> bool:
     """Test the stats endpoint."""
     print_section("Testing Stats Endpoint")
     try:
-        response = requests.get(f"{API_URL}/stats")
+        response = requests.get(f"{api_url}/stats")
         response.raise_for_status()
         data = response.json()
 
@@ -63,11 +62,11 @@ def test_stats() -> bool:
         return False
 
 
-def test_models() -> bool:
+def test_models(api_url: str) -> bool:
     """Test the models endpoint."""
     print_section("Testing Models Endpoint")
     try:
-        response = requests.get(f"{API_URL}/models")
+        response = requests.get(f"{api_url}/models")
         response.raise_for_status()
         data = response.json()
 
@@ -86,7 +85,7 @@ def test_models() -> bool:
         return False
 
 
-def test_query(llm_type: str = "ollama") -> bool:
+def test_query(api_url: str, llm_type: str = "ollama") -> bool:
     """Test the query endpoint."""
     print_section(f"Testing Query Endpoint ({llm_type.upper()})")
 
@@ -98,7 +97,7 @@ def test_query(llm_type: str = "ollama") -> bool:
     try:
         start_time = time.time()
         response = requests.post(
-            f"{API_URL}/query",
+            f"{api_url}/query",
             json={
                 "query": test_query,
                 "llm_type": llm_type
@@ -135,32 +134,33 @@ def test_query(llm_type: str = "ollama") -> bool:
         return False
 
 
-def run_all_tests():
+def run_all_tests(api_url: str = "http://localhost:8000", skip_claude: bool = False):
     """Run all API tests."""
     print("\n" + "=" * 60)
     print("  RAG Code Assistant - API Test Suite")
     print("=" * 60)
-    print(f"\nTesting API at: {API_URL}")
-    print("Make sure the API is running (python app.py)")
+    print(f"\nTesting API at: {api_url}")
+    print("Make sure the API is running (tmw start)")
     print("\nPress Enter to continue...")
     input()
 
     results = {
-        "Health Check": test_health(),
-        "Stats Check": test_stats(),
-        "Models Check": test_models(),
-        "Query Test (Ollama)": test_query("ollama"),
+        "Health Check": test_health(api_url),
+        "Stats Check": test_stats(api_url),
+        "Models Check": test_models(api_url),
+        "Query Test (Ollama)": test_query(api_url, "ollama"),
     }
 
     # Optional: Test Claude if available
-    try:
-        models_response = requests.get(f"{API_URL}/models")
-        if models_response.json()['models']['claude']['available']:
-            print("\n⚠ Claude is available. Test with Claude? (y/n): ", end="")
-            if input().lower() == 'y':
-                results["Query Test (Claude)"] = test_query("claude")
-    except:
-        pass
+    if not skip_claude:
+        try:
+            models_response = requests.get(f"{api_url}/models")
+            if models_response.json()['models']['claude']['available']:
+                print("\n⚠ Claude is available. Test with Claude? (y/n): ", end="")
+                if input().lower() == 'y':
+                    results["Query Test (Claude)"] = test_query(api_url, "claude")
+        except:
+            pass
 
     # Print summary
     print_section("Test Summary")
@@ -181,15 +181,10 @@ def run_all_tests():
     return passed == total
 
 
-if __name__ == "__main__":
-    success = run_all_tests()
-    exit(0 if success else 1)
-
-
 def main():
     """CLI entry point for tests."""
     success = run_all_tests()
-    exit(0 if success else 1)
+    sys.exit(0 if success else 1)
 
 
 if __name__ == "__main__":

@@ -10,13 +10,15 @@ from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-from config import config_manager, get_settings, update_settings, reload_settings, validate_settings
-from ingest import DocumentIngestor
-from rag_chain import chain_manager
+from .config import config_manager, get_settings, update_settings, reload_settings, validate_settings
+from .ingest import DocumentIngestor
+from .rag_chain import chain_manager
+
+settings = get_settings()
 
 # Setup logging
 logging.basicConfig(
-    level=settings.log_level,
+    level=settings.logging.level.lower(),
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
@@ -360,15 +362,18 @@ async def list_models():
     }
 
 
-if __name__ == "__main__":
+def main():
+    """Main entry point for the FastAPI application."""
     import uvicorn
 
-    settings = get_settings()
-
     uvicorn.run(
-        "app:app",
+        "tell_me_why.app:app",
         host=settings.api.host,
         port=settings.api.port,
         reload=settings.api.reload,
         log_level=settings.logging.level.lower()
     )
+
+
+if __name__ == "__main__":
+    main()

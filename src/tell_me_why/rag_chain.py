@@ -4,14 +4,15 @@ RAG chain implementation supporting both Ollama (local) and Claude (cloud) LLMs.
 import logging
 from typing import Dict, Any, Literal
 
-from langchain.chains import RetrievalQA
-from langchain.prompts import PromptTemplate
 from langchain_anthropic import ChatAnthropic
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.llms import Ollama
 from langchain_community.vectorstores import Chroma
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.runnables import RunnablePassthrough
 
-from config import get_settings
+from .config import get_settings
 
 logger = logging.getLogger(__name__)
 
@@ -60,22 +61,30 @@ class RAGChain:
         # Initialize LLM based on type
         self.llm = self._initialize_llm(llm_type)
 
-        # Create prompt template
-        self.prompt = PromptTemplate(
-            template=PROMPT_TEMPLATE,
-            input_variables=["context", "question"]
+        # Create retriever
+        self.retriever = self.vectorstore.as_retriever(
+            search_kwargs={"k": settings.retrieval.top_k}
         )
 
-        # Create retrieval chain
-        self.qa_chain = RetrievalQA.from_chain_type(
-            llm=self.llm,
-            chain_type="stuff",
-            retriever=self.vectorstore.as_retriever(
-                search_kwargs={"k": settings.retrieval.top_k}
-            ),
-            chain_type_kwargs={"prompt": self.prompt},
-            return_source_documents=True
+        # Create prompt template
+        self.prompt = ChatPromptTemplate.from_template(PROMPT_TEMPLATE)
+
+        # Create the RAG chain using LCEL (LangChain Expression Language)
+        def format_docs(docs):
+            return "\n\n".join(doc.page_content for doc in docs)
+
+        self.qa_chain = (
+                {
+                    "context": self.retriever | format_docs,
+                    "question": RunnablePassthrough()
+                }
+                | self.prompt
+                | self.llm
+                | StrOutputParser()
         )
+
+        # Store retriever separately for getting source docs
+        self._retriever = self.retriever
 
         logger.info(f"✓ RAG chain initialized with {llm_type} LLM")
 
@@ -126,12 +135,11 @@ class RAGChain:
         logger.info(f"Processing query with {self.llm_type}: {question[:100]}...")
 
         try:
-            # Run the chain
-            result = self.qa_chain.invoke({"query": question})
+            # Get relevant documents first
+            source_docs = self._retriever.invoke(question)
 
-            # Extract answer and sources
-            answer = result.get("result", "")
-            source_docs = result.get("source_documents", [])
+            # Run the chain to get the answer
+            answer = self.qa_chain.invoke(question)
 
             # Format source information
             sources = []
@@ -167,12 +175,13 @@ class RAGChain:
 
         Args:
             question: The search query
-            k: Number of documents to retrieve (defaults to settings.retrieval_k)
+            k: Number of documents to retrieve (defaults to settings.retrieval.top_k)
 
         Returns:
             List of relevant documents
         """
-        k = k or settings.retrieval_k
+        settings = get_settings()
+        k = k or settings.retrieval.top_k
         docs = self.vectorstore.similarity_search(question, k=k)
         return docs
 

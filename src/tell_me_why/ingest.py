@@ -6,11 +6,6 @@ import logging
 from pathlib import Path
 from typing import List
 
-from langchain.schema import Document
-from langchain.text_splitter import (
-    RecursiveCharacterTextSplitter,
-    Language,
-)
 from langchain_community.document_loaders import (
     TextLoader,
     UnstructuredMarkdownLoader,
@@ -18,8 +13,13 @@ from langchain_community.document_loaders import (
 )
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
+from langchain_core.documents import Document
+from langchain_text_splitters import (
+    RecursiveCharacterTextSplitter,
+    Language,
+)
 
-from config import get_settings, validate_settings
+from .config import get_settings, validate_settings
 
 # Setup logging
 settings = get_settings()
