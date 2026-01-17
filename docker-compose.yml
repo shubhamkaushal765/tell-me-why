@@ -1,0 +1,57 @@
+# Docker Compose configuration for RAG Code Assistant
+# Includes both the API and optional Ollama service
+
+version: '3.8'
+
+services:
+  # RAG API Service
+  rag-api:
+    build: .
+    container_name: rag-code-assistant
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount your private docs directory
+      - ./private_docs:/app/private_docs:ro
+      # Persist vector database
+      - ./chroma_db:/app/chroma_db
+      # Mount .env file for configuration
+      - ./.env:/app/.env:ro
+    environment:
+      - DOCS_PATH=/app/private_docs
+      - CHROMA_DB_PATH=/app/chroma_db
+      - OLLAMA_BASE_URL=http://ollama:11434
+    depends_on:
+      - ollama
+    networks:
+      - rag-network
+    restart: unless-stopped
+
+  # Ollama Service (optional - comment out if using system Ollama)
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama-service
+    ports:
+      - "11434:11434"
+    volumes:
+      # Persist Ollama models
+      - ollama-data:/root/.ollama
+    networks:
+      - rag-network
+    restart: unless-stopped
+    # Uncomment for GPU support
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+
+volumes:
+  ollama-data:
+    driver: local
+
+networks:
+  rag-network:
+    driver: bridge
