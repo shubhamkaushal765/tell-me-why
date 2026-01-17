@@ -10,6 +10,7 @@ from langchain_community.document_loaders import (
     TextLoader,
     UnstructuredMarkdownLoader,
     PyPDFLoader,
+    NotebookLoader,
 )
 from langchain_community.vectorstores import Chroma
 from langchain_core.documents import Document
@@ -172,6 +173,14 @@ class DocumentIngestor:
                 loader = UnstructuredMarkdownLoader(str(file_path))
             elif ext == ".pdf":
                 loader = PyPDFLoader(str(file_path))
+            elif ext == ".ipynb":
+                # Load Jupyter notebooks - extracts both code and markdown cells
+                loader = NotebookLoader(
+                    str(file_path),
+                    include_outputs=True,  # Include cell outputs for context
+                    max_output_length=1000,  # Limit output length to avoid huge chunks
+                    remove_newline=False,  # Keep formatting
+                )
             else:
                 # Default to TextLoader for all other files
                 loader = TextLoader(str(file_path), encoding="utf-8")

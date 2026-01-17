@@ -2,7 +2,7 @@
 
 Local RAG code assistant that actually keeps your code private.
 
-Works with Python, Rust, C#, Java, JS/TS, Go, and many others.
+Works with Python (also jupyter), Rust, C#, Java, JS/TS, Go, and many others.
 
 ### Quick Commands
 

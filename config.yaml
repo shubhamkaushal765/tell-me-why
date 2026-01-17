@@ -158,6 +158,7 @@ ingestion:
       - ".ini"       # INI files
       - ".conf"      # Configuration files
       - ".cfg"       # Configuration files (alt)
+      - ".ipynb"     # Jupyter Notebook
 
     # Database and query languages
     database:

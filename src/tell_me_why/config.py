@@ -97,7 +97,7 @@ class IngestionConfig(BaseModel):
         "ruby": [".rb", ".erb", ".rake", ".gemspec"],
         "php": [".php", ".phtml", ".php3", ".php4", ".php5"],
         "shell": [".sh", ".bash", ".zsh", ".fish", ".ps1", ".bat", ".cmd"],
-        "data": [".json", ".yaml", ".yml", ".xml", ".toml", ".ini", ".conf", ".cfg"],
+        "data": [".json", ".yaml", ".yml", ".xml", ".toml", ".ini", ".conf", ".cfg", ".ipynb"],
         "database": [".sql", ".prisma", ".graphql", ".gql"],
         "mobile": [".swift", ".m", ".mm", ".dart"],
         "other": [".r", ".jl", ".lua", ".vim", ".el", ".clj", ".erl", ".ex", ".exs"]
