@@ -20,9 +20,12 @@ dependencies = [
     "ollama>=0.1.6",
     "pyyaml>=6.0",
     "requests>=2.31.0",
-    "typer[all]>=0.9.0",
     "rich>=13.0.0",
     "hatchling>=1.28.0",
+    "notebook>=7.5.2",
+    "langchain-huggingface>=1.2.0",
+    "langchain-chroma>=1.1.0",
+    "langchain-ollama>=1.0.1",
 ]
 
 [project.optional-dependencies]

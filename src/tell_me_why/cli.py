@@ -1,49 +1,53 @@
 """
 Tell Me Why - CLI Interface
 
-Main command-line interface using Typer for all commands.
+Main command-line interface using Click for all commands.
 Provides a clean, modern CLI with help documentation and colored output.
 """
 import sys
 from pathlib import Path
 from typing import Optional
 
-import typer
+import click
 from rich.console import Console
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
 
-# Initialize Typer app
-app = typer.Typer(
-    name="tmw",
-    help="Tell Me Why - Privacy-preserving RAG system for Angular/React code assistance",
-    add_completion=False,
-    no_args_is_help=True,
-    rich_markup_mode="rich",
-)
-
 console = Console()
 
 
+@click.group(
+    name="tmw",
+    help="Tell Me Why - Privacy-preserving RAG system for Angular/React code assistance",
+    context_settings=dict(help_option_names=['-h', '--help']),
+    invoke_without_command=True,
+)
+@click.pass_context
+def app(ctx):
+    """
+    Tell Me Why - Privacy-preserving RAG system for Angular/React code assistance
+
+    Use 'tmw COMMAND --help' for more information on a command.
+    """
+    if ctx.invoked_subcommand is None:
+        click.echo(ctx.get_help())
+
+
 @app.command("setup")
-def setup_command(
-        auto_install: bool = typer.Option(
-            True,
-            "--auto-install/--no-auto-install",
-            help="Automatically install missing dependencies"
-        ),
-        root_dir: Optional[Path] = typer.Option(
-            None,
-            "--root-dir",
-            "-r",
-            help="Root directory of the project (defaults to current directory)",
-            exists=False,
-            file_okay=False,
-            dir_okay=True,
-            resolve_path=True,
-        ),
-) -> None:
+@click.option(
+    "--auto-install/--no-auto-install",
+    default=True,
+    help="Automatically install missing dependencies"
+)
+@click.option(
+    "--root-dir",
+    "-r",
+    type=click.Path(exists=False, file_okay=False, dir_okay=True, resolve_path=True, path_type=Path),
+    default=None,
+    help="Root directory of the project (defaults to current directory)",
+)
+def setup_command(root_dir: Optional[Path], auto_install: bool = True) -> None:
     """
     Setup the RAG Code Assistant.
 
@@ -70,40 +74,47 @@ def setup_command(
             sys.exit(0)
         else:
             console.print("\n[bold red]✗[/bold red] Setup failed. Check the output above for details.", style="red")
-            sys.exit(1)
     except KeyboardInterrupt:
         console.print("\n[yellow]Setup cancelled by user.[/yellow]")
         sys.exit(130)
     except Exception as e:
+        raise e
         console.print(f"\n[bold red]Error:[/bold red] {e}", style="red")
         sys.exit(1)
 
 
 @app.command("start")
+@click.option(
+    "--host",
+    "-h",
+    type=str,
+    default=None,
+    help="Host to bind the API server (overrides config.yaml)"
+)
+@click.option(
+    "--port",
+    "-p",
+    type=int,
+    default=None,
+    help="Port to bind the API server (overrides config.yaml)"
+)
+@click.option(
+    "--reload/--no-reload",
+    default=None,
+    help="Enable auto-reload on code changes (overrides config.yaml)"
+)
+@click.option(
+    "--log-level",
+    "-l",
+    type=str,
+    default=None,
+    help="Logging level: debug, info, warning, error, critical"
+)
 def start_command(
-        host: Optional[str] = typer.Option(
-            None,
-            "--host",
-            "-h",
-            help="Host to bind the API server (overrides config.yaml)"
-        ),
-        port: Optional[int] = typer.Option(
-            None,
-            "--port",
-            "-p",
-            help="Port to bind the API server (overrides config.yaml)"
-        ),
-        reload: Optional[bool] = typer.Option(
-            None,
-            "--reload/--no-reload",
-            help="Enable auto-reload on code changes (overrides config.yaml)"
-        ),
-        log_level: Optional[str] = typer.Option(
-            None,
-            "--log-level",
-            "-l",
-            help="Logging level: debug, info, warning, error, critical"
-        ),
+        host: Optional[str],
+        port: Optional[int],
+        reload: Optional[bool],
+        log_level: Optional[str],
 ) -> None:
     """
     Start the FastAPI server for the RAG Code Assistant.
@@ -157,24 +168,21 @@ def start_command(
 
 
 @app.command("ingest")
-def ingest_command(
-        docs_path: Optional[Path] = typer.Option(
-            None,
-            "--docs-path",
-            "-d",
-            help="Path to documents directory (overrides config.yaml)",
-            exists=True,
-            file_okay=False,
-            dir_okay=True,
-            resolve_path=True,
-        ),
-        force: bool = typer.Option(
-            False,
-            "--force",
-            "-f",
-            help="Force re-ingestion (clears existing vector store)"
-        ),
-) -> None:
+@click.option(
+    "--docs-path",
+    "-d",
+    type=click.Path(exists=True, file_okay=False, dir_okay=True, resolve_path=True, path_type=Path),
+    default=None,
+    help="Path to documents directory (overrides config.yaml)",
+)
+@click.option(
+    "--force",
+    "-f",
+    is_flag=True,
+    default=False,
+    help="Force re-ingestion (clears existing vector store)"
+)
+def ingest_command(docs_path: Optional[Path], force: bool) -> None:
     """
     Ingest documents into the vector store.
 
@@ -213,7 +221,7 @@ def ingest_command(
         if force:
             if settings.paths.chroma_db_path.exists():
                 console.print("[yellow]⚠ Force flag detected - clearing existing vector store...[/yellow]")
-                if typer.confirm("Are you sure you want to delete the existing vector store?"):
+                if click.confirm("Are you sure you want to delete the existing vector store?"):
                     shutil.rmtree(settings.paths.chroma_db_path)
                     console.print("[green]✓[/green] Vector store cleared\n")
                 else:
@@ -268,19 +276,20 @@ def ingest_command(
 
 
 @app.command("test")
-def test_command(
-        url: str = typer.Option(
-            "http://localhost:8000",
-            "--url",
-            "-u",
-            help="API base URL to test"
-        ),
-        skip_claude: bool = typer.Option(
-            False,
-            "--skip-claude",
-            help="Skip Claude API tests even if available"
-        ),
-) -> None:
+@click.option(
+    "--url",
+    "-u",
+    type=str,
+    default="http://localhost:8000",
+    help="API base URL to test"
+)
+@click.option(
+    "--skip-claude",
+    is_flag=True,
+    default=False,
+    help="Skip Claude API tests even if available"
+)
+def test_command(url: str, skip_claude: bool) -> None:
     """
     Test the RAG Code Assistant API.
 
@@ -302,7 +311,7 @@ def test_command(
     console.print(f"\n[cyan]Testing API at:[/cyan] {url}")
     console.print("[dim]Make sure the API is running (tmw start)[/dim]\n")
 
-    if not typer.confirm("Continue with tests?", default=True):
+    if not click.confirm("Continue with tests?", default=True):
         console.print("[yellow]Tests cancelled.[/yellow]")
         sys.exit(0)
 
@@ -452,20 +461,21 @@ def test_command(
 
 
 @app.command("config")
-def config_command(
-        show: bool = typer.Option(
-            False,
-            "--show",
-            "-s",
-            help="Show current configuration"
-        ),
-        edit: bool = typer.Option(
-            False,
-            "--edit",
-            "-e",
-            help="Open config file in default editor"
-        ),
-) -> None:
+@click.option(
+    "--show",
+    "-s",
+    is_flag=True,
+    default=False,
+    help="Show current configuration"
+)
+@click.option(
+    "--edit",
+    "-e",
+    is_flag=True,
+    default=False,
+    help="Open config file in default editor"
+)
+def config_command(show: bool, edit: bool) -> None:
     """
     Manage configuration settings.
 
@@ -518,13 +528,13 @@ def config_command(
 
 
 @app.command("quick-start")
-def quick_start_command(
-        skip_setup: bool = typer.Option(
-            False,
-            "--skip-setup",
-            help="Skip setup and go straight to starting the server"
-        ),
-) -> None:
+@click.option(
+    "--skip-setup",
+    is_flag=True,
+    default=False,
+    help="Skip setup and go straight to starting the server"
+)
+def quick_start_command(skip_setup: bool) -> None:
     """
     Quick start - setup and launch the API in one command.
 
@@ -563,17 +573,6 @@ def version_command() -> None:
 
     console.print(f"\n[bold cyan]Tell Me Why[/bold cyan] v{__version__}")
     console.print(f"[dim]Author: {__author__}[/dim]\n")
-
-
-# Add a callback for the main app
-@app.callback()
-def main_callback():
-    """
-    Tell Me Why - Privacy-preserving RAG system for Angular/React code assistance
-
-    Use 'tmw COMMAND --help' for more information on a command.
-    """
-    pass
 
 
 if __name__ == "__main__":

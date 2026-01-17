@@ -7,7 +7,7 @@ api_keys:
 
 # Paths
 paths:
-  docs_path: "./private_docs"  # Path to your private documentation and code
+  docs_path: "./rag_documents"  # Path to your private documentation and code
   chroma_db_path: "./chroma_db"  # Path where vector database will be stored
 
 # Embedding Model

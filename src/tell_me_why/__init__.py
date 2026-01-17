@@ -15,7 +15,8 @@ __author__ = "Shubham Kaushal (shubhamkaushal765@gmail.com)"
 # Setup logging
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    filename="./tmw.log"
 )
 logger = logging.getLogger(__name__)
 
@@ -46,6 +47,29 @@ class SetupManager:
             return False
         logger.info(f"✓ Python {version_info.major}.{version_info.minor}.{version_info.micro}")
         return True
+
+    def check_uv(self) -> bool:
+        """Check if uv is installed."""
+        try:
+            result = subprocess.run(
+                ["uv", "--version"],
+                capture_output=True,
+                timeout=5
+            )
+            if result.returncode == 0:
+                version = result.stdout.decode().strip()
+                logger.info(f"✓ uv is installed ({version})")
+                return True
+        except FileNotFoundError:
+            logger.error("✗ uv not found. Install from: https://docs.astral.sh/uv/getting-started/installation/")
+            logger.error("   Quick install: curl -LsSf https://astral.sh/uv/install.sh | sh")
+            return False
+        except subprocess.TimeoutExpired:
+            logger.warning("⚠ uv command timed out")
+            return False
+        except Exception as e:
+            logger.error(f"✗ Error checking uv: {e}")
+            return False
 
     def check_ollama(self) -> bool:
         """Check if Ollama is installed and running."""
@@ -183,11 +207,11 @@ ingestion:
         logger.info(f"✓ Created config file: {self.config_path}")
 
     def install_dependencies(self) -> bool:
-        """Install required dependencies."""
+        """Install required dependencies using uv."""
         try:
-            logger.info("Installing dependencies...")
+            logger.info("Installing dependencies with uv...")
             result = subprocess.run(
-                [sys.executable, "-m", "pip", "install", "-e", "."],
+                ["uv", "pip", "install", "-e", "."],
                 cwd=self.root_dir,
                 capture_output=True,
                 text=True
@@ -249,6 +273,12 @@ ingestion:
         if not self.check_python_version():
             return False
 
+        # Check uv
+        if not self.check_uv():
+            logger.error("\nPlease install uv before continuing.")
+            logger.error("Installation instructions: https://docs.astral.sh/uv/getting-started/installation/")
+            return False
+
         # Check Ollama
         self.check_ollama()  # Non-blocking
 
@@ -269,7 +299,7 @@ ingestion:
                     logger.error("Failed to install dependencies")
                     return False
             else:
-                logger.error("Please install dependencies: pip install -e .")
+                logger.error("Please install dependencies: uv pip install -e .")
                 return False
 
         logger.info("\n" + "=" * 60)

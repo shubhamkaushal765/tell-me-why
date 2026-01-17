@@ -5,12 +5,12 @@ import logging
 from typing import Dict, Any, Literal
 
 from langchain_anthropic import ChatAnthropic
-from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain_community.llms import Ollama
-from langchain_community.vectorstores import Chroma
+from langchain_chroma import Chroma
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough
+from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_ollama import OllamaLLM
 
 from .config import get_settings
 
@@ -94,7 +94,7 @@ class RAGChain:
 
         if llm_type == "ollama":
             logger.info(f"Initializing Ollama LLM: {settings.llm.ollama.model}")
-            return Ollama(
+            return OllamaLLM(
                 model=settings.llm.ollama.model,
                 base_url=settings.llm.ollama.base_url,
                 temperature=settings.llm.ollama.temperature,
