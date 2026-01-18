@@ -1,0 +1,53 @@
+* {
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+}
+
+html,
+body {
+    max-width: 100vw;
+    overflow-x: hidden;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom scrollbar for webkit browsers */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+/* Dark mode scrollbar */
+@media (prefers-color-scheme: dark) {
+    ::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.3);
+    }
+}
+
+/* Prevent flash of unstyled content */
+html {
+    visibility: visible;
+    opacity: 1;
+}
