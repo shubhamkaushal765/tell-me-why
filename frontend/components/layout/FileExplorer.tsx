@@ -23,7 +23,6 @@ import {
     ExpandMore,
     ChevronRight,
     Code,
-    Description,
     Image,
     PictureAsPdf,
 } from '@mui/icons-material'
@@ -214,10 +213,11 @@ export default function FileExplorer() {
                     File Explorer
                 </Typography>
                 <Tooltip title="Refresh">
-                    <IconButton size="small" onClick={loadFileTree}
-                                disabled={loading}>
-                        <Refresh fontSize="small"/>
-                    </IconButton>
+                    <div>
+                        <IconButton size="small" onClick={loadFileTree}
+                                    disabled={loading}>
+                            <Refresh fontSize="small"/>
+                        </IconButton></div>
                 </Tooltip>
             </Box>
 

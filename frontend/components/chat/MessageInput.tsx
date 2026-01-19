@@ -21,7 +21,11 @@ interface MessageInputProps {
     onStop?: () => void
 }
 
-export default function MessageInput({onSend, isLoading, onStop}: MessageInputProps) {
+export default function MessageInput({
+                                         onSend,
+                                         isLoading,
+                                         onStop
+                                     }: MessageInputProps) {
     const [message, setMessage] = useState('')
     const [llmType, setLlmType] = useState<LLMType>('ollama')
 
@@ -67,7 +71,8 @@ export default function MessageInput({onSend, isLoading, onStop}: MessageInputPr
                                 <Box component="span" fontWeight={600}>
                                     Ollama
                                 </Box>
-                                <Box component="span" fontSize="0.75rem" color="text.secondary" ml={1}>
+                                <Box component="span" fontSize="0.75rem"
+                                     color="text.secondary" ml={1}>
                                     🔒 Private
                                 </Box>
                             </Box>
@@ -77,7 +82,8 @@ export default function MessageInput({onSend, isLoading, onStop}: MessageInputPr
                                 <Box component="span" fontWeight={600}>
                                     Claude
                                 </Box>
-                                <Box component="span" fontSize="0.75rem" color="text.secondary" ml={1}>
+                                <Box component="span" fontSize="0.75rem"
+                                     color="text.secondary" ml={1}>
                                     ⚡ Fast
                                 </Box>
                             </Box>
@@ -105,42 +111,44 @@ export default function MessageInput({onSend, isLoading, onStop}: MessageInputPr
                 />
 
                 {/* Send/Stop Button */}
-                {/* Send/Stop Button */}
                 <Tooltip title={isLoading ? 'Stop' : 'Send (Enter)'}>
-    <span>
-        <IconButton
-            type={isLoading ? 'button' : 'submit'}
-            onClick={isLoading ? onStop : undefined}
-            color="primary"
-            disabled={!isLoading && !message.trim()}
-            sx={{
-                backgroundColor: 'primary.main',
-                color: 'primary.contrastText',
-                '&:hover': {
-                    backgroundColor: 'primary.dark',
-                },
-                '&.Mui-disabled': {
-                    backgroundColor: 'action.disabledBackground',
-                    color: 'action.disabled',
-                },
-            }}
-        >
-            {isLoading ? <Stop/> : <Send/>}
-        </IconButton>
-    </span>
+                    <span>
+                        <IconButton
+                            type={isLoading ? 'button' : 'submit'}
+                            onClick={isLoading ? onStop : undefined}
+                            color="primary"
+                            disabled={!isLoading && !message.trim()}
+                            sx={{
+                                backgroundColor: 'primary.main',
+                                color: 'primary.contrastText',
+                                '&:hover': {
+                                    backgroundColor: 'primary.dark',
+                                },
+                                '&.Mui-disabled': {
+                                    backgroundColor: 'action.disabledBackground',
+                                    color: 'action.disabled',
+                                },
+                            }}
+                        >
+                            {isLoading ? <Stop/> : <Send/>}
+                        </IconButton>
+                    </span>
                 </Tooltip>
             </Box>
 
             {/* Helper text */}
-            <Box sx={{mt: 1, display: 'flex', justifyContent: 'space-between'}}>
-                <Box component="span" fontSize="0.75rem" color="text.secondary">
+            <Box
+                sx={{mt: 1, display: 'flex', justifyContent: 'space-between'}}>
+                <Box component="span" fontSize="0.75rem"
+                     color="text.secondary">
                     {llmType === 'ollama' ? (
                         '🔒 Your data stays on your machine'
                     ) : (
                         '⚠️ Data sent to Anthropic servers'
                     )}
                 </Box>
-                <Box component="span" fontSize="0.75rem" color="text.secondary">
+                <Box component="span" fontSize="0.75rem"
+                     color="text.secondary">
                     Press <strong>Shift+Enter</strong> for new line
                 </Box>
             </Box>
