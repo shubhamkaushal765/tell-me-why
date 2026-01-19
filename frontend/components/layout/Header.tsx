@@ -14,6 +14,7 @@ import {
     Divider,
     ListItemIcon,
     ListItemText,
+    alpha,
 } from '@mui/material'
 import {
     Brightness4,
@@ -22,7 +23,7 @@ import {
     Info,
     Delete,
     Download,
-
+    Code,
 } from '@mui/icons-material'
 import {useThemeMode} from '../ThemeRegistry'
 import {useChat} from '@/hooks/useChat'
@@ -89,57 +90,97 @@ export default function Header() {
                 backgroundColor: 'background.paper',
                 borderBottom: '1px solid',
                 borderColor: 'divider',
+                backdropFilter: 'blur(8px)',
             }}
         >
-            <Toolbar sx={{minHeight: {xs: 56, sm: 64}}}>
-                <Typography
-                    variant="h6"
-                    component="div"
-                    sx={{
-                        flexGrow: 1,
-                        fontWeight: 700,
-                        fontSize: {xs: '1.1rem', sm: '1.25rem'},
-                        background: 'linear-gradient(45deg, #06B6D4 30%, #0891B2 90%)',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
-                        backgroundClip: 'text',
-                    }}
-                >
-                    Tell Me Why
-                </Typography>
+            <Toolbar sx={{minHeight: {xs: 64, sm: 72}, px: {xs: 2, sm: 3}}}>
+                <Box sx={{display: 'flex', alignItems: 'center', gap: 1.5}}>
+                    <Box
+                        sx={{
+                            width: 40,
+                            height: 40,
+                            borderRadius: 2,
+                            background: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            boxShadow: '0 4px 12px rgba(37, 99, 235, 0.2)',
+                        }}
+                    >
+                        <Code sx={{color: 'white', fontSize: 24}}/>
+                    </Box>
+                    <Box>
+                        <Typography
+                            variant="h6"
+                            sx={{
+                                fontWeight: 700,
+                                fontSize: {xs: '1.125rem', sm: '1.25rem'},
+                                background: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)',
+                                WebkitBackgroundClip: 'text',
+                                WebkitTextFillColor: 'transparent',
+                                backgroundClip: 'text',
+                                lineHeight: 1.2,
+                            }}
+                        >
+                            Tell Me Why
+                        </Typography>
+                        <Typography
+                            variant="caption"
+                            sx={{
+                                color: 'text.secondary',
+                                fontSize: '0.75rem',
+                                fontWeight: 500,
+                            }}
+                        >
+                            RAG Code Assistant
+                        </Typography>
+                    </Box>
+                </Box>
+
+                <Box sx={{flexGrow: 1}}/>
 
                 <Box sx={{display: 'flex', alignItems: 'center', gap: 1}}>
-                    {/* Message count */}
                     {messages.length > 0 && (
                         <Chip
-                            label={`${messages.length} messages`}
+                            label={`${messages.length} ${messages.length === 1 ? 'message' : 'messages'}`}
                             size="small"
-                            variant="outlined"
                             sx={{
                                 display: {xs: 'none', sm: 'flex'},
+                                height: 28,
+                                fontWeight: 600,
+                                backgroundColor: alpha(mode === 'light' ? '#2563eb' : '#3b82f6', 0.1),
+                                color: mode === 'light' ? '#2563eb' : '#3b82f6',
+                                border: 'none',
                             }}
                         />
                     )}
 
-                    {/* Theme toggle */}
-                    <Tooltip
-                        title={mode === 'dark' ? 'Light mode' : 'Dark mode'}>
+                    <Tooltip title={mode === 'dark' ? 'Light mode' : 'Dark mode'}>
                         <IconButton
                             onClick={toggleTheme}
                             sx={{
                                 color: 'text.primary',
+                                '&:hover': {
+                                    backgroundColor: 'action.hover',
+                                    transform: 'scale(1.05)',
+                                },
+                                transition: 'all 0.2s ease',
                             }}
                         >
                             {mode === 'dark' ? <Brightness7/> : <Brightness4/>}
                         </IconButton>
                     </Tooltip>
 
-                    {/* Settings menu */}
                     <Tooltip title="Settings">
                         <IconButton
                             onClick={handleMenuOpen}
                             sx={{
                                 color: 'text.primary',
+                                '&:hover': {
+                                    backgroundColor: 'action.hover',
+                                    transform: 'scale(1.05)',
+                                },
+                                transition: 'all 0.2s ease',
                             }}
                         >
                             <Settings/>
@@ -150,24 +191,25 @@ export default function Header() {
                         anchorEl={anchorEl}
                         open={Boolean(anchorEl)}
                         onClose={handleMenuClose}
-                        transformOrigin={{
-                            horizontal: 'right',
-                            vertical: 'top'
-                        }}
-                        anchorOrigin={{
-                            horizontal: 'right',
-                            vertical: 'bottom'
-                        }}
+                        transformOrigin={{horizontal: 'right', vertical: 'top'}}
+                        anchorOrigin={{horizontal: 'right', vertical: 'bottom'}}
                         PaperProps={{
-                            sx: {minWidth: 280, mt: 1},
+                            sx: {
+                                minWidth: 280,
+                                mt: 1.5,
+                                borderRadius: 2,
+                                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+                            },
                         }}
                     >
-                        {/* Stats section */}
                         <MenuItem disabled>
                             <ListItemIcon>
                                 <Info fontSize="small"/>
                             </ListItemIcon>
-                            <ListItemText primary="System Info"/>
+                            <ListItemText
+                                primary="System Info"
+                                primaryTypographyProps={{fontWeight: 600}}
+                            />
                         </MenuItem>
 
                         {statsLoading ? (
@@ -179,16 +221,19 @@ export default function Header() {
                                 <MenuItem disabled>
                                     <ListItemText
                                         secondary={`Documents: ${stats.vector_store.total_documents}`}
+                                        secondaryTypographyProps={{fontSize: '0.875rem'}}
                                     />
                                 </MenuItem>
                                 <MenuItem disabled>
                                     <ListItemText
                                         secondary={`Default LLM: ${stats.llm.default}`}
+                                        secondaryTypographyProps={{fontSize: '0.875rem'}}
                                     />
                                 </MenuItem>
                                 <MenuItem disabled>
                                     <ListItemText
                                         secondary={`Claude ${stats.llm.claude_available ? '✓' : '✗'}`}
+                                        secondaryTypographyProps={{fontSize: '0.875rem'}}
                                     />
                                 </MenuItem>
                             </>
@@ -196,17 +241,14 @@ export default function Header() {
 
                         <Divider sx={{my: 1}}/>
 
-                        {/* Actions */}
-                        <MenuItem onClick={handleExport}
-                                  disabled={messages.length === 0}>
+                        <MenuItem onClick={handleExport} disabled={messages.length === 0}>
                             <ListItemIcon>
                                 <Download fontSize="small"/>
                             </ListItemIcon>
                             <ListItemText primary="Export Chat"/>
                         </MenuItem>
 
-                        <MenuItem onClick={handleClearChat}
-                                  disabled={messages.length === 0}>
+                        <MenuItem onClick={handleClearChat} disabled={messages.length === 0}>
                             <ListItemIcon>
                                 <Delete fontSize="small"/>
                             </ListItemIcon>

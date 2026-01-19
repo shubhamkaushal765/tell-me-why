@@ -1,7 +1,7 @@
 'use client'
 
 import {useState} from 'react'
-import {Box, IconButton, Typography, Paper} from '@mui/material'
+import {Box, IconButton, Typography, Paper, alpha} from '@mui/material'
 import {ContentCopy, Check} from '@mui/icons-material'
 import {copyToClipboard} from '@/lib_fe/utils'
 
@@ -26,10 +26,12 @@ export default function CodeBlock({code, language = 'text'}: CodeBlockProps) {
             elevation={0}
             sx={{
                 position: 'relative',
-                backgroundColor: 'code.background',
+                backgroundColor: alpha('#000', 0.04),
                 borderRadius: 2,
                 overflow: 'hidden',
                 my: 2,
+                border: '1px solid',
+                borderColor: 'divider',
             }}
         >
             {/* Header */}
@@ -39,34 +41,65 @@ export default function CodeBlock({code, language = 'text'}: CodeBlockProps) {
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     px: 2,
-                    py: 1,
+                    py: 1.25,
                     borderBottom: '1px solid',
                     borderColor: 'divider',
-                    backgroundColor: 'rgba(0, 0, 0, 0.2)',
+                    backgroundColor: alpha('#000', 0.02),
                 }}
             >
-                <Typography
-                    variant="caption"
-                    sx={{
-                        color: 'code.text',
-                        fontFamily: 'monospace',
-                        textTransform: 'uppercase',
-                        fontWeight: 600,
-                    }}
-                >
-                    {language}
-                </Typography>
+                <Box sx={{display: 'flex', alignItems: 'center', gap: 1}}>
+                    <Box
+                        sx={{
+                            width: 12,
+                            height: 12,
+                            borderRadius: '50%',
+                            backgroundColor: '#ff5f56',
+                        }}
+                    />
+                    <Box
+                        sx={{
+                            width: 12,
+                            height: 12,
+                            borderRadius: '50%',
+                            backgroundColor: '#ffbd2e',
+                        }}
+                    />
+                    <Box
+                        sx={{
+                            width: 12,
+                            height: 12,
+                            borderRadius: '50%',
+                            backgroundColor: '#27c93f',
+                        }}
+                    />
+                    <Typography
+                        variant="caption"
+                        sx={{
+                            ml: 1,
+                            color: 'text.secondary',
+                            fontFamily: 'monospace',
+                            fontWeight: 600,
+                            fontSize: '0.75rem',
+                        }}
+                    >
+                        {language}
+                    </Typography>
+                </Box>
                 <IconButton
                     size="small"
                     onClick={handleCopy}
                     sx={{
-                        color: 'code.text',
+                        color: 'text.secondary',
+                        transition: 'all 0.2s ease',
                         '&:hover': {
-                            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                            backgroundColor: 'action.hover',
+                            color: copied ? 'success.main' : 'primary.main',
+                            transform: 'scale(1.1)',
                         },
                     }}
                 >
-                    {copied ? <Check fontSize="small"/> : <ContentCopy fontSize="small"/>}
+                    {copied ? <Check fontSize="small"/> :
+                        <ContentCopy fontSize="small"/>}
                 </IconButton>
             </Box>
 
@@ -75,21 +108,22 @@ export default function CodeBlock({code, language = 'text'}: CodeBlockProps) {
                 component="pre"
                 sx={{
                     m: 0,
-                    p: 2,
+                    p: 2.5,
                     overflow: 'auto',
                     maxHeight: '500px',
+                    backgroundColor: alpha('#000', 0.02),
                     '&::-webkit-scrollbar': {
                         width: '8px',
                         height: '8px',
                     },
                     '&::-webkit-scrollbar-track': {
-                        backgroundColor: 'rgba(0, 0, 0, 0.1)',
+                        backgroundColor: 'transparent',
                     },
                     '&::-webkit-scrollbar-thumb': {
-                        backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                        backgroundColor: alpha('#000', 0.2),
                         borderRadius: '4px',
                         '&:hover': {
-                            backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                            backgroundColor: alpha('#000', 0.3),
                         },
                     },
                 }}
@@ -97,11 +131,12 @@ export default function CodeBlock({code, language = 'text'}: CodeBlockProps) {
                 <Box
                     component="code"
                     sx={{
-                        fontFamily: '"Fira Code", "JetBrains Mono", Consolas, Monaco, monospace',
+                        fontFamily: '"Fira Code", "JetBrains Mono", "SF Mono", Consolas, Monaco, monospace',
                         fontSize: '0.875rem',
-                        lineHeight: 1.6,
-                        color: 'code.text',
+                        lineHeight: 1.7,
+                        color: 'text.primary',
                         whiteSpace: 'pre',
+                        fontWeight: 450,
                     }}
                 >
                     {code}

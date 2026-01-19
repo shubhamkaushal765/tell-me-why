@@ -1,9 +1,16 @@
 'use client'
 
 import {useRef, useEffect} from 'react'
-import {Box, Container, CircularProgress, Typography} from '@mui/material'
+import {
+    Box,
+    Container,
+    CircularProgress,
+    Typography,
+    alpha
+} from '@mui/material'
+import {Code, AutoAwesome, BugReport, School} from '@mui/icons-material'
 import {useChat} from '@/hooks/useChat'
-import MessageBubble from './MessageBubble'
+import {MessageBubble} from './MessageBubble'
 import MessageInput from './MessageInput'
 import {LLMType} from '@/lib_fe/types'
 
@@ -11,10 +18,32 @@ export default function ChatInterface() {
     const {messages, isLoading, sendMessage, deleteMessage} = useChat()
     const messagesEndRef = useRef<HTMLDivElement>(null)
 
-    // Auto-scroll to bottom when new messages arrive
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({behavior: 'smooth'})
     }, [messages])
+
+    const examples = [
+        {
+            icon: Code,
+            text: 'Generate a React login component',
+            color: '#2563eb',
+        },
+        {
+            icon: AutoAwesome,
+            text: 'Explain the authentication flow',
+            color: '#7c3aed',
+        },
+        {
+            icon: BugReport,
+            text: 'Debug: Why is my API returning 404?',
+            color: '#dc2626',
+        },
+        {
+            icon: School,
+            text: 'Best practices for state management',
+            color: '#059669',
+        },
+    ]
 
     return (
         <Box
@@ -24,6 +53,7 @@ export default function ChatInterface() {
                 display: 'flex',
                 flexDirection: 'column',
                 overflow: 'hidden',
+                position: 'relative',
             }}
         >
             {/* Messages Area */}
@@ -36,18 +66,18 @@ export default function ChatInterface() {
                         width: '8px',
                     },
                     '&::-webkit-scrollbar-track': {
-                        backgroundColor: 'background.default',
+                        backgroundColor: 'transparent',
                     },
                     '&::-webkit-scrollbar-thumb': {
-                        backgroundColor: 'action.disabled',
+                        backgroundColor: alpha('#000', 0.1),
                         borderRadius: '4px',
                         '&:hover': {
-                            backgroundColor: 'action.disabledBackground',
+                            backgroundColor: alpha('#000', 0.15),
                         },
                     },
                 }}
             >
-                <Container maxWidth={false} sx={{py: 3}}>
+                <Container maxWidth="lg" sx={{py: 4}}>
                     {messages.length === 0 ? (
                         <Box
                             sx={{
@@ -55,53 +85,131 @@ export default function ChatInterface() {
                                 flexDirection: 'column',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                minHeight: '50vh',
+                                minHeight: '60vh',
                                 textAlign: 'center',
-                                gap: 3,
+                                gap: 4,
                             }}
                         >
-                            <Typography variant="h3" fontWeight={700}
-                                        color="text.primary">
-                                Tell Me Why
-                            </Typography>
-                            <Typography variant="h6" color="text.secondary"
-                                        maxWidth="600px">
-                                Your private RAG code assistant. Ask questions
-                                about your codebase, generate
-                                components, or debug issues.
-                            </Typography>
-                            <Box sx={{mt: 2}}>
-                                <Typography variant="body2"
-                                            color="text.secondary" mb={1}>
+                            <Box
+                                sx={{
+                                    width: 80,
+                                    height: 80,
+                                    borderRadius: 3,
+                                    background: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    boxShadow: '0 8px 24px rgba(37, 99, 235, 0.25)',
+                                    animation: 'pulse 2s ease-in-out infinite',
+                                    '@keyframes pulse': {
+                                        '0%, 100%': {
+                                            transform: 'scale(1)',
+                                        },
+                                        '50%': {
+                                            transform: 'scale(1.05)',
+                                        },
+                                    },
+                                }}
+                            >
+                                <Code sx={{color: 'white', fontSize: 40}}/>
+                            </Box>
+
+                            <Box>
+                                <Typography
+                                    variant="h3"
+                                    fontWeight={700}
+                                    sx={{
+                                        mb: 1.5,
+                                        background: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)',
+                                        WebkitBackgroundClip: 'text',
+                                        WebkitTextFillColor: 'transparent',
+                                        backgroundClip: 'text',
+                                    }}
+                                >
+                                    Tell Me Why
+                                </Typography>
+                                <Typography
+                                    variant="h6"
+                                    color="text.secondary"
+                                    maxWidth="600px"
+                                    sx={{lineHeight: 1.6, fontWeight: 400}}
+                                >
+                                    Your private RAG code assistant. Ask
+                                    questions about your codebase,
+                                    generate components, or debug issues.
+                                </Typography>
+                            </Box>
+
+                            <Box
+                                sx={{mt: 2, width: '100%', maxWidth: '700px'}}>
+                                <Typography
+                                    variant="body2"
+                                    color="text.secondary"
+                                    mb={2}
+                                    fontWeight={600}
+                                >
                                     Try asking:
                                 </Typography>
                                 <Box
                                     sx={{
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        gap: 1,
-                                        alignItems: 'center',
+                                        display: 'grid',
+                                        gridTemplateColumns: {
+                                            xs: '1fr',
+                                            md: 'repeat(2, 1fr)'
+                                        },
+                                        gap: 2,
                                     }}
                                 >
-                                    {[
-                                        'Generate a login component',
-                                        'Explain the authentication module',
-                                        'Debug this code: [paste your code]',
-                                        'What are the best practices for state management?',
-                                    ].map((example, idx) => (
-                                        <Typography
+                                    {examples.map((example, idx) => (
+                                        <Box
                                             key={idx}
-                                            variant="body2"
                                             sx={{
-                                                px: 2,
-                                                py: 1,
-                                                backgroundColor: 'action.hover',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: 2,
+                                                p: 2.5,
+                                                backgroundColor: 'background.paper',
                                                 borderRadius: 2,
-                                                fontStyle: 'italic',
+                                                border: '1px solid',
+                                                borderColor: 'divider',
+                                                cursor: 'pointer',
+                                                transition: 'all 0.2s ease',
+                                                '&:hover': {
+                                                    transform: 'translateY(-2px)',
+                                                    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.08)',
+                                                    borderColor: example.color,
+                                                },
                                             }}
+                                            onClick={() => sendMessage(example.text, 'ollama')}
                                         >
-                                            "{example}"
-                                        </Typography>
+                                            <Box
+                                                sx={{
+                                                    width: 40,
+                                                    height: 40,
+                                                    borderRadius: 1.5,
+                                                    backgroundColor: alpha(example.color, 0.1),
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    flexShrink: 0,
+                                                }}
+                                            >
+                                                <example.icon sx={{
+                                                    color: example.color,
+                                                    fontSize: 20
+                                                }}/>
+                                            </Box>
+                                            <Typography
+                                                variant="body2"
+                                                sx={{
+                                                    textAlign: 'left',
+                                                    fontWeight: 500,
+                                                    color: 'text.primary',
+                                                }}
+                                            >
+                                                {example.text}
+                                            </Typography>
+                                        </Box>
                                     ))}
                                 </Box>
                             </Box>
@@ -116,13 +224,29 @@ export default function ChatInterface() {
                                 />
                             ))}
 
-                            {/* Loading indicator */}
                             {isLoading && (
-                                <Box sx={{
-                                    display: 'flex',
-                                    justifyContent: 'flex-start',
-                                    mb: 2
-                                }}>
+                                <Box
+                                    sx={{
+                                        display: 'flex',
+                                        gap: 2,
+                                        mb: 3,
+                                        alignItems: 'flex-start',
+                                    }}
+                                >
+                                    <Box
+                                        sx={{
+                                            width: 40,
+                                            height: 40,
+                                            borderRadius: 2,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            backgroundColor: alpha('#64748b', 0.1),
+                                            color: 'text.secondary',
+                                        }}
+                                    >
+                                        <AutoAwesome/>
+                                    </Box>
                                     <Box
                                         sx={{
                                             display: 'flex',
@@ -131,12 +255,15 @@ export default function ChatInterface() {
                                             px: 3,
                                             py: 2,
                                             backgroundColor: 'background.paper',
-                                            borderRadius: 3,
+                                            border: '1px solid',
+                                            borderColor: 'divider',
+                                            borderRadius: 2.5,
                                         }}
                                     >
                                         <CircularProgress size={20}/>
                                         <Typography variant="body2"
-                                                    color="text.secondary">
+                                                    color="text.secondary"
+                                                    fontWeight={500}>
                                             Thinking...
                                         </Typography>
                                     </Box>
@@ -155,10 +282,11 @@ export default function ChatInterface() {
                     borderTop: '1px solid',
                     borderColor: 'divider',
                     backgroundColor: 'background.default',
-                    py: 2,
+                    py: 2.5,
+                    boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.05)',
                 }}
             >
-                <Container maxWidth={false}>
+                <Container maxWidth="lg">
                     <MessageInput
                         onSend={(message: string, llmType: LLMType) => sendMessage(message, llmType)}
                         isLoading={isLoading}
