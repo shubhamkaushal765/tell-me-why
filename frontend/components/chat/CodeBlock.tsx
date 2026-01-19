@@ -3,7 +3,7 @@
 import {useState} from 'react'
 import {Box, IconButton, Typography, Paper} from '@mui/material'
 import {ContentCopy, Check} from '@mui/icons-material'
-import {copyToClipboard} from '@/lib/utils'
+import {copyToClipboard} from '@/lib_fe/utils'
 
 interface CodeBlockProps {
     code: string

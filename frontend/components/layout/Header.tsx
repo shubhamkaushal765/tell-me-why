@@ -26,9 +26,9 @@ import {
 } from '@mui/icons-material'
 import {useThemeMode} from '../ThemeRegistry'
 import {useChat} from '@/hooks/useChat'
-import {apiClient} from '@/lib/api'
-import {StatsResponse} from '@/lib/types'
-import {exportChatAsMarkdown, downloadAsFile} from '@/lib/utils'
+import {apiClient} from '@/lib_fe/api'
+import {StatsResponse} from '@/lib_fe/types'
+import {exportChatAsMarkdown, downloadAsFile} from '@/lib_fe/utils'
 import {useSnackbar} from 'notistack'
 
 export default function Header() {

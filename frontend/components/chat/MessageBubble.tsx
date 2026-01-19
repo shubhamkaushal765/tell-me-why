@@ -3,8 +3,8 @@
 import {Box, Paper, Typography, Chip, IconButton, Collapse} from '@mui/material'
 import {ExpandMore, Delete} from '@mui/icons-material'
 import {useState} from 'react'
-import {ChatMessage} from '@/lib/types'
-import {parseCodeBlocks, formatDate} from '@/lib/utils'
+import {ChatMessage} from '@/lib_fe/types'
+import {parseCodeBlocks, formatDate} from '@/lib_fe/utils'
 import CodeBlock from './CodeBlock'
 
 interface MessageBubbleProps {

@@ -13,7 +13,7 @@ import {
     Tooltip,
 } from '@mui/material'
 import {Send, Stop} from '@mui/icons-material'
-import {LLMType} from '@/lib/types'
+import {LLMType} from '@/lib_fe/types'
 
 interface MessageInputProps {
     onSend: (message: string, llmType: LLMType) => void

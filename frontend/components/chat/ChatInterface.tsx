@@ -5,7 +5,7 @@ import {Box, Container, CircularProgress, Typography} from '@mui/material'
 import {useChat} from '@/hooks/useChat'
 import MessageBubble from './MessageBubble'
 import MessageInput from './MessageInput'
-import {LLMType} from '@/lib/types'
+import {LLMType} from '@/lib_fe/types'
 
 export default function ChatInterface() {
     const {messages, isLoading, sendMessage, deleteMessage} = useChat()

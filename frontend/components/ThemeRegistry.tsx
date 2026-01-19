@@ -4,7 +4,7 @@ import {useState, useMemo, createContext, useContext, ReactNode, useEffect} from
 import {ThemeProvider} from '@mui/material/styles'
 import CssBaseline from '@mui/material/CssBaseline'
 import {AppRouterCacheProvider} from '@mui/material-nextjs/v15-appRouter'
-import {createAppTheme} from '@/lib/theme'
+import {createAppTheme} from '@/lib_fe/theme'
 
 type ThemeMode = 'light' | 'dark'
 

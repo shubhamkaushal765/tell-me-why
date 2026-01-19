@@ -1,9 +1,9 @@
 'use client'
 
 import {useState, useCallback, useEffect} from 'react'
-import {apiClient} from '@/lib/api'
-import {ChatMessage, LLMType, ApiError} from '@/lib/types'
-import {generateId} from '@/lib/utils'
+import {apiClient} from '@/lib_fe/api'
+import {ChatMessage, LLMType, ApiError} from '@/lib_fe/types'
+import {generateId} from '@/lib_fe/utils'
 
 const STORAGE_KEY = 'tmw-chat-history'
 
