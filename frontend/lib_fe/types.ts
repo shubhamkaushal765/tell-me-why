@@ -9,6 +9,7 @@ export const SourceSchema = z.object({
     file: z.string(),
     content: z.string(),
     score: z.number().optional(),
+    metadata: z.record(z.unknown()).optional(),
 })
 
 // Single message schema (for UI state management)
@@ -166,6 +167,7 @@ export type ErrorResponse = z.infer<typeof ErrorResponseSchema>
 
 // Alias for compatibility
 export type ChatMessage = Message
+export type LLMType = 'ollama' | 'claude'
 
 // ============================================================================
 // Additional UI-specific Types

@@ -115,6 +115,11 @@ const lightTheme: ThemeOptions = {
             disabled: '#9CA3AF', // Gray 400
         },
         divider: '#E5E7EB', // Gray 200
+        // @ts-ignore - Custom color for code blocks
+        code: {
+            background: '#1E293B',
+            text: '#E2E8F0',
+        },
     },
     typography,
     shape,
@@ -215,6 +220,11 @@ const darkTheme: ThemeOptions = {
             disabled: '#64748B', // Slate 500
         },
         divider: '#334155', // Slate 700
+        // @ts-ignore - Custom color for code blocks
+        code: {
+            background: '#0F172A',
+            text: '#E2E8F0',
+        },
     },
     typography,
     shape,
