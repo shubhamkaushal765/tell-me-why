@@ -8,6 +8,7 @@ export default function HomePage() {
     return (
         <Box
             sx={{
+                width: '100%',
                 height: '100vh',
                 display: 'flex',
                 flexDirection: 'column',
@@ -15,7 +16,7 @@ export default function HomePage() {
             }}
         >
             <Header/>
-            <Box sx={{flex: 1, overflow: 'hidden'}}>
+            <Box sx={{flex: 1, overflow: 'hidden', width: '100%'}}>
                 <ChatInterface/>
             </Box>
         </Box>

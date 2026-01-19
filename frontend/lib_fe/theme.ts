@@ -119,6 +119,20 @@ const lightTheme: ThemeOptions = {
     typography,
     shape,
     components: {
+        MuiCssBaseline: {
+            styleOverrides: {
+                body: {
+                    width: '100%',
+                    height: '100%',
+                    margin: 0,
+                    padding: 0,
+                },
+                '#__next': {
+                    width: '100%',
+                    height: '100%',
+                },
+            },
+        },
         MuiButton: {
             styleOverrides: {
                 root: {
@@ -205,6 +219,20 @@ const darkTheme: ThemeOptions = {
     typography,
     shape,
     components: {
+        MuiCssBaseline: {
+            styleOverrides: {
+                body: {
+                    width: '100%',
+                    height: '100%',
+                    margin: 0,
+                    padding: 0,
+                },
+                '#__next': {
+                    width: '100%',
+                    height: '100%',
+                },
+            },
+        },
         MuiButton: {
             styleOverrides: {
                 root: {

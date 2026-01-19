@@ -26,7 +26,7 @@ export const useThemeMode = () => {
 export default function ThemeRegistry({children}: { children: ReactNode }) {
     // Always start with 'light' for both server and client
     const [mode, setMode] = useState<ThemeMode>('light')
-    const [mounted, setMounted] = useState(false)
+    const [, setMounted] = useState(false)
 
     // After mount, read from localStorage and update if needed
     useEffect(() => {

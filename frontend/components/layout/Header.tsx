@@ -91,16 +91,18 @@ export default function Header() {
                 borderColor: 'divider',
             }}
         >
-            <Toolbar>
+            <Toolbar sx={{minHeight: {xs: 56, sm: 64}}}>
                 <Typography
                     variant="h6"
                     component="div"
                     sx={{
                         flexGrow: 1,
                         fontWeight: 700,
+                        fontSize: {xs: '1.1rem', sm: '1.25rem'},
                         background: 'linear-gradient(45deg, #06B6D4 30%, #0891B2 90%)',
                         WebkitBackgroundClip: 'text',
                         WebkitTextFillColor: 'transparent',
+                        backgroundClip: 'text',
                     }}
                 >
                     Tell Me Why
@@ -113,19 +115,33 @@ export default function Header() {
                             label={`${messages.length} messages`}
                             size="small"
                             variant="outlined"
+                            sx={{
+                                display: {xs: 'none', sm: 'flex'},
+                            }}
                         />
                     )}
 
                     {/* Theme toggle */}
-                    <Tooltip title={mode === 'dark' ? 'Light mode' : 'Dark mode'}>
-                        <IconButton onClick={toggleTheme} color="inherit">
+                    <Tooltip
+                        title={mode === 'dark' ? 'Light mode' : 'Dark mode'}>
+                        <IconButton
+                            onClick={toggleTheme}
+                            sx={{
+                                color: 'text.primary',
+                            }}
+                        >
                             {mode === 'dark' ? <Brightness7/> : <Brightness4/>}
                         </IconButton>
                     </Tooltip>
 
                     {/* Settings menu */}
                     <Tooltip title="Settings">
-                        <IconButton onClick={handleMenuOpen} color="inherit">
+                        <IconButton
+                            onClick={handleMenuOpen}
+                            sx={{
+                                color: 'text.primary',
+                            }}
+                        >
                             <Settings/>
                         </IconButton>
                     </Tooltip>
@@ -134,8 +150,14 @@ export default function Header() {
                         anchorEl={anchorEl}
                         open={Boolean(anchorEl)}
                         onClose={handleMenuClose}
-                        transformOrigin={{horizontal: 'right', vertical: 'top'}}
-                        anchorOrigin={{horizontal: 'right', vertical: 'bottom'}}
+                        transformOrigin={{
+                            horizontal: 'right',
+                            vertical: 'top'
+                        }}
+                        anchorOrigin={{
+                            horizontal: 'right',
+                            vertical: 'bottom'
+                        }}
                         PaperProps={{
                             sx: {minWidth: 280, mt: 1},
                         }}
@@ -175,14 +197,16 @@ export default function Header() {
                         <Divider sx={{my: 1}}/>
 
                         {/* Actions */}
-                        <MenuItem onClick={handleExport} disabled={messages.length === 0}>
+                        <MenuItem onClick={handleExport}
+                                  disabled={messages.length === 0}>
                             <ListItemIcon>
                                 <Download fontSize="small"/>
                             </ListItemIcon>
                             <ListItemText primary="Export Chat"/>
                         </MenuItem>
 
-                        <MenuItem onClick={handleClearChat} disabled={messages.length === 0}>
+                        <MenuItem onClick={handleClearChat}
+                                  disabled={messages.length === 0}>
                             <ListItemIcon>
                                 <Delete fontSize="small"/>
                             </ListItemIcon>
