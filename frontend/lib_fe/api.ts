@@ -12,6 +12,14 @@ import {
     IngestRequest,
     IngestResponse,
     IngestResponseSchema,
+    ConfigResponse,
+    ConfigResponseSchema,
+    FileTreeResponse,
+    FileTreeResponseSchema,
+    FileContentResponse,
+    FileContentResponseSchema,
+    FileSearchResponse,
+    FileSearchResponseSchema,
     ErrorResponse,
     ErrorResponseSchema,
     APIError,
@@ -108,7 +116,6 @@ async function apiRequest<T>(
             }
 
             const message =
-                errorData?.error ||
                 errorData?.detail ||
                 `API request failed: ${response.status} ${response.statusText}`
 
@@ -154,6 +161,13 @@ async function apiRequest<T>(
 // ============================================================================
 
 export const apiClient = {
+    /**
+     * Root health check endpoint
+     */
+    async root(): Promise<HealthResponse> {
+        return apiRequest('/', {method: 'GET'}, HealthResponseSchema, 5000)
+    },
+
     /**
      * Health check endpoint
      */
@@ -202,6 +216,104 @@ export const apiClient = {
             },
             IngestResponseSchema,
             120000 // 2 minutes for ingestion
+        )
+    },
+
+    /**
+     * Get current configuration
+     */
+    async getConfig(): Promise<ConfigResponse> {
+        return apiRequest('/config', {method: 'GET'}, ConfigResponseSchema)
+    },
+
+    /**
+     * Update configuration settings
+     */
+    async updateConfig(updates: Record<string, any>): Promise<{
+        status: string
+        message: string
+        updated_fields: string[]
+        config: ConfigResponse
+    }> {
+        return apiRequest(
+            '/config',
+            {
+                method: 'PUT',
+                body: JSON.stringify(updates),
+            },
+            z.object({
+                status: z.string(),
+                message: z.string(),
+                updated_fields: z.array(z.string()),
+                config: ConfigResponseSchema,
+            })
+        )
+    },
+
+    /**
+     * Reload configuration from file
+     */
+    async reloadConfig(): Promise<{
+        status: string
+        message: string
+        config: ConfigResponse
+    }> {
+        return apiRequest(
+            '/config/reload',
+            {method: 'POST'},
+            z.object({
+                status: z.string(),
+                message: z.string(),
+                config: ConfigResponseSchema,
+            })
+        )
+    },
+
+    /**
+     * Get file tree structure
+     */
+    async getFileTree(params?: {
+        max_depth?: number
+        include_files?: boolean
+    }): Promise<FileTreeResponse> {
+        const searchParams = new URLSearchParams()
+        if (params?.max_depth !== undefined) {
+            searchParams.set('max_depth', params.max_depth.toString())
+        }
+        if (params?.include_files !== undefined) {
+            searchParams.set('include_files', params.include_files.toString())
+        }
+
+        const query = searchParams.toString()
+        const endpoint = query ? `/files/tree?${query}` : '/files/tree'
+
+        return apiRequest(endpoint, {method: 'GET'}, FileTreeResponseSchema)
+    },
+
+    /**
+     * Get file content
+     */
+    async getFileContent(path: string): Promise<FileContentResponse> {
+        const searchParams = new URLSearchParams({path})
+        return apiRequest(
+            `/files/content?${searchParams}`,
+            {method: 'GET'},
+            FileContentResponseSchema
+        )
+    },
+
+    /**
+     * Search for files matching a pattern
+     */
+    async searchFiles(pattern: string, maxResults: number = 100): Promise<FileSearchResponse> {
+        const searchParams = new URLSearchParams({
+            pattern,
+            max_results: maxResults.toString(),
+        })
+        return apiRequest(
+            `/files/search?${searchParams}`,
+            {method: 'GET'},
+            FileSearchResponseSchema
         )
     },
 }
