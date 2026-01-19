@@ -19,6 +19,7 @@ export default function ChatInterface() {
     return (
         <Box
             sx={{
+                width: '100%',
                 height: '100%',
                 display: 'flex',
                 flexDirection: 'column',
@@ -46,7 +47,7 @@ export default function ChatInterface() {
                     },
                 }}
             >
-                <Container maxWidth="md" sx={{py: 3}}>
+                <Container maxWidth={false} sx={{py: 3}}>
                     {messages.length === 0 ? (
                         <Box
                             sx={{
@@ -59,15 +60,19 @@ export default function ChatInterface() {
                                 gap: 3,
                             }}
                         >
-                            <Typography variant="h3" fontWeight={700} color="text.primary">
+                            <Typography variant="h3" fontWeight={700}
+                                        color="text.primary">
                                 Tell Me Why
                             </Typography>
-                            <Typography variant="h6" color="text.secondary" maxWidth="600px">
-                                Your private RAG code assistant. Ask questions about your codebase, generate
+                            <Typography variant="h6" color="text.secondary"
+                                        maxWidth="600px">
+                                Your private RAG code assistant. Ask questions
+                                about your codebase, generate
                                 components, or debug issues.
                             </Typography>
                             <Box sx={{mt: 2}}>
-                                <Typography variant="body2" color="text.secondary" mb={1}>
+                                <Typography variant="body2"
+                                            color="text.secondary" mb={1}>
                                     Try asking:
                                 </Typography>
                                 <Box
@@ -113,7 +118,11 @@ export default function ChatInterface() {
 
                             {/* Loading indicator */}
                             {isLoading && (
-                                <Box sx={{display: 'flex', justifyContent: 'flex-start', mb: 2}}>
+                                <Box sx={{
+                                    display: 'flex',
+                                    justifyContent: 'flex-start',
+                                    mb: 2
+                                }}>
                                     <Box
                                         sx={{
                                             display: 'flex',
@@ -126,7 +135,8 @@ export default function ChatInterface() {
                                         }}
                                     >
                                         <CircularProgress size={20}/>
-                                        <Typography variant="body2" color="text.secondary">
+                                        <Typography variant="body2"
+                                                    color="text.secondary">
                                             Thinking...
                                         </Typography>
                                     </Box>
@@ -148,7 +158,7 @@ export default function ChatInterface() {
                     py: 2,
                 }}
             >
-                <Container maxWidth="md">
+                <Container maxWidth={false}>
                     <MessageInput
                         onSend={(message: string, llmType: LLMType) => sendMessage(message, llmType)}
                         isLoading={isLoading}

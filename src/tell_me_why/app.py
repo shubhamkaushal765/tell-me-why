@@ -4,13 +4,15 @@ Provides endpoints for querying the RAG system and managing document ingestion.
 """
 import logging
 from contextlib import asynccontextmanager
-from typing import Literal
+from typing import Literal, Optional
 
 from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-from .config import config_manager, get_settings, update_settings, reload_settings, validate_settings
+from .config import config_manager, get_settings, update_settings, \
+    reload_settings, validate_settings
+from .file_service import FileService
 from .ingest import DocumentIngestor
 from .rag_chain import chain_manager
 
@@ -27,7 +29,9 @@ logger = logging.getLogger(__name__)
 # Pydantic models for API
 class QueryRequest(BaseModel):
     """Request model for querying the RAG system."""
-    query: str = Field(..., min_length=1, description="The question or task to process")
+    query: str = Field(
+        ..., min_length=1, description="The question or task to process"
+        )
     llm_type: Literal["ollama", "claude"] = Field(
         default="ollama",
         description="LLM to use: 'ollama' for local (private) or 'claude' for cloud (better performance)"
@@ -37,15 +41,15 @@ class QueryRequest(BaseModel):
         "json_schema_extra": {
             "examples": [
                 {
-                    "query": "Generate an Angular component for user login",
+                    "query":    "Generate an Angular component for user login",
                     "llm_type": "ollama"
                 },
                 {
-                    "query": "Debug this code: export class MyComponent { constructor() { console.log('test') } }",
+                    "query":    "Debug this code: export class MyComponent { constructor() { console.log('test') } }",
                     "llm_type": "claude"
                 },
                 {
-                    "query": "Explain the authentication module",
+                    "query":    "Explain the authentication module",
                     "llm_type": "ollama"
                 }
             ]
@@ -83,6 +87,23 @@ class HealthResponse(BaseModel):
     vector_store_path: str
 
 
+class FileTreeResponse(BaseModel):
+    """Response model for file tree."""
+    root: str
+    tree: dict
+
+
+class FileContentResponse(BaseModel):
+    """Response model for file content."""
+    path: str
+    name: str
+    extension: str
+    size: int
+    content_type: str
+    content: str
+    lines: Optional[int] = None
+
+
 # Lifespan context manager for startup/shutdown events
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -104,7 +125,9 @@ async def lifespan(app: FastAPI):
     logger.info("=" * 60)
     logger.info("API is ready to accept requests!")
     logger.info(f"Default LLM: {settings.llm.default}")
-    logger.info(f"Listening on: http://{settings.api.host}:{settings.api.port}")
+    logger.info(
+        f"Listening on: http://{settings.api.host}:{settings.api.port}"
+        )
     logger.info("=" * 60)
 
     yield
@@ -197,10 +220,10 @@ async def update_config(updates: dict):
         logger.info(f"Configuration updated: {list(updates.keys())}")
 
         return {
-            "status": "success",
-            "message": "Configuration updated successfully",
+            "status":         "success",
+            "message":        "Configuration updated successfully",
             "updated_fields": list(updates.keys()),
-            "config": config_manager.get_dict()
+            "config":         config_manager.get_dict()
         }
     except Exception as e:
         logger.error(f"Failed to update config: {e}", exc_info=True)
@@ -222,9 +245,9 @@ async def reload_config():
         logger.info("Configuration reloaded from file")
 
         return {
-            "status": "success",
+            "status":  "success",
             "message": "Configuration reloaded successfully",
-            "config": config_manager.get_dict()
+            "config":  config_manager.get_dict()
         }
     except Exception as e:
         logger.error(f"Failed to reload config: {e}", exc_info=True)
@@ -269,7 +292,9 @@ async def query_rag(request: QueryRequest):
 
 
 @app.post("/ingest", response_model=IngestResponse)
-async def ingest_documents(request: IngestRequest, background_tasks: BackgroundTasks):
+async def ingest_documents(
+        request: IngestRequest, background_tasks: BackgroundTasks
+        ):
     """
     Ingest or update documents in the vector store.
     This is run as a background task as it can take several minutes.
@@ -280,7 +305,9 @@ async def ingest_documents(request: IngestRequest, background_tasks: BackgroundT
         logger.info("Received ingestion request")
 
         if request.force_reingest:
-            logger.warning("Force reingest requested - this will clear the existing vector store")
+            logger.warning(
+                "Force reingest requested - this will clear the existing vector store"
+                )
             # TODO: Implement vector store clearing if needed
 
         # Run ingestion in background
@@ -290,7 +317,9 @@ async def ingest_documents(request: IngestRequest, background_tasks: BackgroundT
                 ingestor.run_ingestion()
                 logger.info("✓ Background ingestion completed")
             except Exception as e:
-                logger.error(f"Background ingestion failed: {e}", exc_info=True)
+                logger.error(
+                    f"Background ingestion failed: {e}", exc_info=True
+                    )
 
         background_tasks.add_task(run_ingestion)
 
@@ -318,17 +347,17 @@ async def get_stats():
             "vector_store": {
                 "total_documents": collection.count(),
                 "embedding_model": settings.embedding.model,
-                "location": str(settings.paths.chroma_db_path)
+                "location":        str(settings.paths.chroma_db_path)
             },
-            "llm": {
-                "default": settings.llm.default,
-                "ollama_model": settings.llm.ollama.model,
-                "claude_model": settings.llm.claude.model,
+            "llm":          {
+                "default":          settings.llm.default,
+                "ollama_model":     settings.llm.ollama.model,
+                "claude_model":     settings.llm.claude.model,
                 "claude_available": bool(settings.api_keys.anthropic_api_key)
             },
-            "retrieval": {
-                "top_k": settings.retrieval.top_k,
-                "chunk_size": settings.chunking.chunk_size,
+            "retrieval":    {
+                "top_k":         settings.retrieval.top_k,
+                "chunk_size":    settings.chunking.chunk_size,
                 "chunk_overlap": settings.chunking.chunk_overlap
             }
         }
@@ -345,21 +374,124 @@ async def list_models():
     models = {
         "ollama": {
             "available": True,  # Assume always available if Ollama is running
-            "model": settings.llm.ollama.model,
-            "base_url": settings.llm.ollama.base_url,
-            "privacy": "✓ Fully local - your data never leaves your machine"
+            "model":     settings.llm.ollama.model,
+            "base_url":  settings.llm.ollama.base_url,
+            "privacy":   "✓ Fully local - your data never leaves your machine"
         },
         "claude": {
             "available": bool(settings.api_keys.anthropic_api_key),
-            "model": settings.llm.claude.model,
-            "privacy": "⚠ Cloud-based - data is sent to Anthropic servers"
+            "model":     settings.llm.claude.model,
+            "privacy":   "⚠ Cloud-based - data is sent to Anthropic servers"
         }
     }
 
     return {
         "default": settings.llm.default,
-        "models": models
+        "models":  models
     }
+
+
+@app.get("/files/tree", response_model=FileTreeResponse)
+async def get_file_tree(
+        max_depth: Optional[int] = None,
+        include_files: bool = True
+):
+    """
+    Get the folder structure of the documents directory.
+
+    Args:
+        max_depth: Maximum depth to traverse (None for unlimited, recommended: 3-5 for large repos)
+        include_files: Whether to include files or only directories
+
+    Returns:
+        Tree structure of the documents directory
+    """
+    try:
+        settings = get_settings()
+        file_service = FileService(settings.paths.docs_path)
+
+        result = file_service.get_file_tree(
+            max_depth=max_depth,
+            include_files=include_files
+        )
+
+        return FileTreeResponse(**result)
+
+    except ValueError as e:
+        logger.error(f"Invalid file tree request: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Failed to get file tree: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/files/content", response_model=FileContentResponse)
+async def get_file_content(path: str):
+    """
+    Get the content of a specific file.
+
+    Args:
+        path: Relative path to the file from the documents directory
+
+    Returns:
+        File metadata and content
+
+    Examples:
+        - /files/content?path=README.md
+        - /files/content?path=src/components/Login.tsx
+    """
+    try:
+        settings = get_settings()
+        file_service = FileService(settings.paths.docs_path)
+
+        result = file_service.get_file_content(path)
+
+        return FileContentResponse(**result)
+
+    except FileNotFoundError as e:
+        logger.warning(f"File not found: {path}")
+        raise HTTPException(status_code=404, detail=str(e))
+    except ValueError as e:
+        logger.error(f"Invalid file content request: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Failed to get file content: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/files/search")
+async def search_files(pattern: str, max_results: int = 100):
+    """
+    Search for files matching a pattern.
+
+    Args:
+        pattern: Search pattern (supports wildcards, e.g., '*.py', '**/*.tsx')
+        max_results: Maximum number of results to return (default: 100)
+
+    Returns:
+        List of matching files
+
+    Examples:
+        - /files/search?pattern=*.py
+        - /files/search?pattern=**/*.tsx
+        - /files/search?pattern=**/test_*.py
+    """
+    try:
+        settings = get_settings()
+        file_service = FileService(settings.paths.docs_path)
+
+        results = file_service.search_files(pattern, max_results)
+
+        return {
+            "pattern":     pattern,
+            "count":       len(results),
+            "max_results": max_results,
+            "files":       results
+        }
+
+    except Exception as e:
+        logger.error(f"Failed to search files: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 def main():

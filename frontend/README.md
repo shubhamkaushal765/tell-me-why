@@ -41,7 +41,7 @@ tell-me-why-frontend/
 ├── 🪝 hooks/
 │   └── useChat.ts                      # Chat state + localStorage persistence
 │
-├── 📚 lib/
+├── 📚 lib_fe/
 │   ├── api.ts                          # Type-safe API client (fetch + Zod)
 │   ├── types.ts                        # TypeScript types + Zod schemas
 │   ├── theme.ts                        # Custom MUI theme (light/dark)
